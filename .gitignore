@@ -14,3 +14,7 @@
 .cxx
 local.properties
 /.agent
+
+# Android release signing
+*.jks
+*.keystore

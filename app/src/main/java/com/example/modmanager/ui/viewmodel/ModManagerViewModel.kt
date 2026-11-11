@@ -180,7 +180,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 val scanned = repository.scanMods(path, uriStr)
                 _uiState.update {
                     it.copy(
-                        mods = orderModsForGame(scanned, it.gameLoadOrder),
+                        mods = orderModsForGame(scanned, it.displayedGameLoadOrder),
                         isLoading = false,
                         selectedMod = scanned.find { m -> m.id == it.selectedMod?.id } ?: scanned.firstOrNull()
                     )
@@ -359,12 +359,13 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             val order = state.appLoadOrder
                 .ifEmpty { state.displayedGameLoadOrder }
                 .toMutableList()
+            fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
             state.mods.forEach { mod ->
                 val already = order.any { saved ->
-                    val normalized = saved.trim().lowercase()
+                    val normalizedSaved = normalized(saved)
                     listOf(mod.title, mod.folderName, mod.id)
-                        .map { it.trim().lowercase() }
-                        .any { it == normalized }
+                        .map(::normalized)
+                        .any { it == normalizedSaved }
                 }
                 if (!already) order += mod.title
             }
