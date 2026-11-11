@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +51,9 @@ fun ModCard(
     onClick: () -> Unit,
     showToggle: Boolean = true,
     showReorderControls: Boolean = true,
+    showSelectionCheckbox: Boolean = false,
+    isSelected: Boolean = false,
+    onSelectionChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -151,13 +155,13 @@ fun ModCard(
                 ) {
                     Text(
                         text = mod.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
                         fontWeight = FontWeight.Bold,
                         color = if (mod.isEnabled) MaterialTheme.colorScheme.onSurface
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
+                        maxLines = 3,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier.weight(1f)
                     )
 
                     // Version Tag
@@ -209,6 +213,32 @@ fun ModCard(
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState())
                             .padding(top = 2.dp)
+                    )
+                }
+            }
+
+            if (showSelectionCheckbox) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(horizontal = 5.dp, vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "#${mod.loadOrder + 1}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = onSelectionChanged
                     )
                 }
             }

@@ -17,6 +17,8 @@ data class ModListUiState(
     val appLoadOrder: List<String> = emptyList(),
     /** Folder-tab batch selection; this is separate from active/inactive state. */
     val selectedFolderModIds: Set<String> = emptySet(),
+    /** Active-tab selection for grouped load-order moves. */
+    val selectedActiveModIds: Set<String> = emptySet(),
     val selectedMod: Mod? = null,
     val searchQuery: String = "",
     val selectedTagFilter: String? = null,

@@ -29,6 +29,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,9 +73,29 @@ fun SettingsScreen(
     onEnableAll: () -> Unit,
     onDisableAll: () -> Unit,
     onRescanMods: () -> Unit,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    statusMessage: String? = null,
+    onClearError: () -> Unit = {},
+    onClearStatus: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var pathInput by remember(activeFolderPath) { mutableStateOf(activeFolderPath) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearError()
+        }
+    }
+
+    LaunchedEffect(statusMessage) {
+        statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearStatus()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -90,6 +114,7 @@ fun SettingsScreen(
                 )
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
     ) { innerPadding ->
@@ -101,6 +126,10 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
             // Storage Path Configuration Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -414,7 +443,10 @@ fun SettingsScreenPreview() {
             onLaunchSourceSaveFilePicker = {},
             onEnableAll = {},
             onDisableAll = {},
-            onRescanMods = {}
+            onRescanMods = {},
+            isLoading = false,
+            errorMessage = null,
+            statusMessage = null
         )
     }
 }

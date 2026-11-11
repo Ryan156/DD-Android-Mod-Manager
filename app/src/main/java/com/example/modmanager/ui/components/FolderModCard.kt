@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.ui.theme.StatusEnabledGreen
 
@@ -67,10 +68,10 @@ fun FolderModCard(
             ) {
                 Text(
                     mod.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 3,
+                    overflow = TextOverflow.Clip
                 )
                 if (mod.author.isKnownModder()) {
                     Text(

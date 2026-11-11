@@ -104,6 +104,15 @@ fun ModManagerApp(
                     onClearFolderSelection = {
                         viewModel.clearFolderModSelection()
                     },
+                    onActiveModSelectionChanged = { modId, selected ->
+                        viewModel.setActiveModSelected(modId, selected)
+                    },
+                    onMoveSelectedActiveModsToPosition = { position ->
+                        viewModel.moveSelectedActiveModsToPosition(position)
+                    },
+                    onClearActiveSelection = {
+                        viewModel.clearActiveModSelection()
+                    },
                     onDismissTransferReport = {
                         viewModel.dismissTransferReport()
                     },
@@ -191,6 +200,15 @@ fun ModManagerApp(
                     },
                     onRescanMods = {
                         viewModel.scanMods()
+                    },
+                    isLoading = uiState.isLoading,
+                    errorMessage = uiState.errorMessage,
+                    statusMessage = uiState.statusMessage,
+                    onClearError = {
+                        viewModel.clearError()
+                    },
+                    onClearStatus = {
+                        viewModel.clearStatus()
                     },
                     modifier = Modifier.fillMaxSize()
                 )

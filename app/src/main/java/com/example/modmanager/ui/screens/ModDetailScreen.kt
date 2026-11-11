@@ -67,8 +67,7 @@ fun ModDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = mod?.title ?: "Mod Details",
-                        maxLines = 1,
+                        text = "Mod Details",
                         style = MaterialTheme.typography.titleLarge
                     )
                 },

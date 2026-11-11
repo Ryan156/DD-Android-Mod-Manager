@@ -41,6 +41,24 @@ class ModMetadataReaderTest {
     }
 
     @Test
+    fun testParseProjectXmlVersionComponents() {
+        val xmlContent = """
+            <project>
+                <Title>Versioned Mod</Title>
+                <VersionMajor>1</VersionMajor>
+                <VersionMinor>2</VersionMinor>
+                <TargetBuild>1</TargetBuild>
+            </project>
+        """.trimIndent()
+
+        val metadata = ModMetadataReader.parseProjectXml(
+            ByteArrayInputStream(xmlContent.toByteArray(Charsets.UTF_8))
+        )
+
+        assertEquals("1.2.1", metadata?.version)
+    }
+
+    @Test
     fun testParseNestedProjectTags() {
         val xmlContent = """
             <project>

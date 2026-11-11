@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "300234984215",
+    "project_id": "dd-mod-manager",
+    "storage_bucket": "dd-mod-manager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300234984215:android:19d89862d493774ead4552",
+        "android_client_info": {
+          "package_name": "com.darkestdungeon.modmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC9R_yll-gtwZChUeYZOFb_4j3ebzkwH8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

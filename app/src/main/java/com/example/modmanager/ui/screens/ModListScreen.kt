@@ -1,18 +1,21 @@
 package com.darkestdungeon.modmanager.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.FolderOff
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
@@ -26,9 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -47,8 +51,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.ui.components.FolderModCard
 import com.darkestdungeon.modmanager.ui.components.ModCard
@@ -67,6 +75,9 @@ fun ModListScreen(
     onEnableSelectedMods: () -> Unit,
     onDisableSelectedMods: () -> Unit,
     onClearFolderSelection: () -> Unit,
+    onActiveModSelectionChanged: (String, Boolean) -> Unit,
+    onMoveSelectedActiveModsToPosition: (Int) -> Unit,
+    onClearActiveSelection: () -> Unit,
     onDismissTransferReport: () -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
@@ -78,6 +89,7 @@ fun ModListScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var activeDestinationInput by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
@@ -134,10 +146,10 @@ fun ModListScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                        Image(
+                            painter = painterResource(R.mipmap.darkestdungeon_modmanager_foreground),
+                            contentDescription = "DD Mod Manager",
+                            modifier = Modifier.size(28.dp)
                         )
                         Text(
                             text = "DD Mod Manager",
@@ -178,20 +190,28 @@ fun ModListScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                TabRow(
+                PrimaryScrollableTabRow(
                     selectedTabIndex = selectedTab,
+                    edgePadding = 0.dp,
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 ) {
                     listOf(
-                        "Mods Folder (${uiState.folderMods.size})",
+                        "Folder (${uiState.folderMods.size})",
                         "Active (${uiState.activeMods.size})",
                         "Inactive (${uiState.inactiveMods.size})",
-                        "Save Orders"
+                        "Saves"
                     ).forEachIndexed { index, label ->
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(label, style = MaterialTheme.typography.labelLarge) }
+                            text = {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
+                            }
                         )
                     }
                 }
@@ -200,8 +220,8 @@ fun ModListScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (selectedTab < 3) {
                         SearchBarAndFilter(
@@ -244,6 +264,56 @@ fun ModListScreen(
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text("Enable selected")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (selectedTab == 1) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "${uiState.selectedActiveModIds.size} selected",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (uiState.selectedActiveModIds.isNotEmpty()) {
+                                    TextButton(onClick = onClearActiveSelection) {
+                                        Text("Clear")
+                                    }
+                                }
+                            }
+                            if (uiState.selectedActiveModIds.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = activeDestinationInput,
+                                        onValueChange = { value ->
+                                            activeDestinationInput = value.filter(Char::isDigit)
+                                        },
+                                        label = { Text("Start at order #") },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Button(
+                                        onClick = {
+                                            activeDestinationInput.toIntOrNull()?.let { position ->
+                                                onMoveSelectedActiveModsToPosition(position)
+                                                activeDestinationInput = ""
+                                            }
+                                        },
+                                        enabled = activeDestinationInput.toIntOrNull()?.let { it > 0 } == true
+                                    ) {
+                                        Text("Move")
                                     }
                                 }
                             }
@@ -339,7 +409,7 @@ fun ModListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp, top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         itemsIndexed(
                             items = filteredList,
@@ -390,7 +460,12 @@ fun ModListScreen(
                                     onMoveUp = { onMoveModUp(mod.id) },
                                     onMoveDown = { onMoveModDown(mod.id) },
                                     showToggle = false,
-                                    showReorderControls = selectedTab == 1,
+                                    showReorderControls = false,
+                                    showSelectionCheckbox = selectedTab == 1,
+                                    isSelected = mod.id in uiState.selectedActiveModIds,
+                                    onSelectionChanged = { selected ->
+                                        onActiveModSelectionChanged(mod.id, selected)
+                                    },
                                     onClick = { onNavigateToModDetail(mod) }
                                 )
                             }
@@ -450,12 +525,12 @@ private fun SaveOrdersTab(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Campaign Save Load Orders",
+            text = "Save Load Orders",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Import both saves in Settings, review their serialized mod order here, then stage the source order for the target campaign.",
+            text = "Source save is the campaign order you want to use. Target save is the campaign that will receive it. Import both in Settings, then copy the source order to the target.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -464,14 +539,24 @@ private fun SaveOrdersTab(
             enabled = sourceSelected && targetSelected && sourceOrder.isNotEmpty(),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Copy Source Order to Target")
+            Text("Copy source order to target")
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SaveOrderColumn("Source (${sourceOrder.size})", sourceOrder, Modifier.weight(1f))
-            SaveOrderColumn("Target (${targetOrder.size})", targetOrder, Modifier.weight(1f))
+            SaveOrderColumn(
+                title = "Source save (${sourceOrder.size})",
+                order = sourceOrder,
+                modifier = Modifier.weight(1f)
+            )
+            SaveOrderColumn(
+                title = "Target save (${targetOrder.size})",
+                order = targetOrder,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -482,26 +567,37 @@ private fun SaveOrderColumn(
     order: List<String>,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier) {
+    Card(
+        modifier = modifier.fillMaxHeight()
+    ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(title, fontWeight = FontWeight.Bold)
-            if (order.isEmpty()) {
-                Text(
-                    "No order loaded",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                order.forEachIndexed { index, name ->
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                if (order.isEmpty()) {
                     Text(
-                        "${index + 1}. $name",
+                        "No order loaded",
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                } else {
+                    order.forEachIndexed { index, name ->
+                        Text(
+                            "${index + 1}. $name",
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
@@ -561,6 +657,9 @@ fun ModListScreenPreview() {
             onEnableSelectedMods = {},
             onDisableSelectedMods = {},
             onClearFolderSelection = {},
+            onActiveModSelectionChanged = { _, _ -> },
+            onMoveSelectedActiveModsToPosition = {},
+            onClearActiveSelection = {},
             onDismissTransferReport = {},
             onMoveModUp = {},
             onMoveModDown = {},

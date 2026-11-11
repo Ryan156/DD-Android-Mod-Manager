@@ -291,6 +291,18 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { it.copy(selectedFolderModIds = emptySet()) }
     }
 
+    fun setActiveModSelected(modId: String, selected: Boolean) {
+        _uiState.update { state ->
+            val next = state.selectedActiveModIds.toMutableSet()
+            if (selected) next += modId else next -= modId
+            state.copy(selectedActiveModIds = next)
+        }
+    }
+
+    fun clearActiveModSelection() {
+        _uiState.update { it.copy(selectedActiveModIds = emptySet()) }
+    }
+
     fun enableSelectedMods() {
         viewModelScope.launch {
             val state = _uiState.value
@@ -532,6 +544,60 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     is TransferOutcome.Success -> Unit
                 }
             }
+        }
+    }
+
+    /**
+     * Moves the selected active mods as one block to a 1-based load-order
+     * position. Their current relative order is preserved; other mods remain
+     * in order and are shifted down from the insertion point.
+     */
+    fun moveSelectedActiveModsToPosition(destinationPosition: Int) {
+        val state = _uiState.value
+        val selectedIds = state.selectedActiveModIds
+        if (selectedIds.isEmpty() || destinationPosition < 1) return
+
+        val currentOrder = state.appLoadOrder
+            .ifEmpty { state.displayedGameLoadOrder }
+        if (currentOrder.isEmpty()) return
+
+        fun normalized(value: String): String = value.trim().lowercase().replace(" ", "")
+        val selectedKeys = state.mods
+            .filter { it.id in selectedIds }
+            .flatMap { mod -> listOf(mod.title, mod.folderName, mod.id) }
+            .map(::normalized)
+            .toSet()
+        if (selectedKeys.isEmpty()) return
+
+        val selectedEntries = currentOrder.filter { normalized(it) in selectedKeys }
+        if (selectedEntries.isEmpty()) return
+
+        val remaining = currentOrder.filterNot { normalized(it) in selectedKeys }
+        val insertionIndex = (destinationPosition - 1).coerceIn(0, remaining.size)
+        val newAppOrder = buildList {
+            addAll(remaining.take(insertionIndex))
+            addAll(selectedEntries)
+            addAll(remaining.drop(insertionIndex))
+        }
+        if (newAppOrder == currentOrder) {
+            clearActiveModSelection()
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                mods = orderModsForGame(it.mods, newAppOrder),
+                appLoadOrder = newAppOrder,
+                selectedActiveModIds = emptySet(),
+                sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) {
+                    it.sourceGameLoadOrder
+                } else newAppOrder
+            )
+        }
+
+        viewModelScope.launch {
+            repository.saveAppLoadOrder(newAppOrder)
+            applyAppOrderToSourceSave(newAppOrder)
         }
     }
 

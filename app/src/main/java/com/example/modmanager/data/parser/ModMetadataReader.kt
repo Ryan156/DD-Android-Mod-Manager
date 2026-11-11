@@ -130,7 +130,15 @@ object ModMetadataReader {
             val id = getTagValue("Id") ?: getTagValue("id")
             val title = getTagValue("Title") ?: getTagValue("title")
             val author = getTagValue("Author") ?: getTagValue("author")
-            val version = getTagValue("ModVersion") ?: getTagValue("version") ?: getTagValue("Version")
+            val versionMajor = getTagValue("VersionMajor")
+            val versionMinor = getTagValue("VersionMinor")
+            val targetBuild = getTagValue("TargetBuild")
+            val version = if (versionMajor != null || versionMinor != null || targetBuild != null) {
+                listOf(versionMajor ?: "0", versionMinor ?: "0", targetBuild ?: "0")
+                    .joinToString(".")
+            } else {
+                getTagValue("ModVersion") ?: getTagValue("version") ?: getTagValue("Version")
+            }
             val description = getTagValue("ItemDescription")
                 ?: getTagValue("ItemDescriptionHtml")
                 ?: getTagValue("Description")
