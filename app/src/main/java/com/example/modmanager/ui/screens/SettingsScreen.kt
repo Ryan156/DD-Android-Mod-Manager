@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -239,21 +240,25 @@ fun SettingsScreen(
                     ) {
                         Button(
                             onClick = onLaunchSourceSaveFilePicker,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Icon(Icons.Rounded.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Import source save")
+                            Text("Import source save", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                         }
                         OutlinedButton(
                             onClick = onLaunchSaveFilePicker,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Icon(Icons.Rounded.Description, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Import target save")
+                            Text("Import target save", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
