@@ -144,7 +144,7 @@ This repository does not distribute, host, link to, or provide:
 
 Users are responsible for obtaining the game, the Wicked Android port, save files, and mods legally and independently. This project is intended only to help manage user-owned mod folders and save files.
 
-No piracy. No game APK sharing.
+No piracy, no game APK distribution.
 
 ## License
 
