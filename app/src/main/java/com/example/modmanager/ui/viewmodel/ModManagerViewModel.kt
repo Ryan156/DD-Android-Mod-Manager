@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.darkestdungeon.modmanager.data.model.Mod
+import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.data.repository.ModRepository
 import com.darkestdungeon.modmanager.data.repository.ModRepository.TransferOutcome
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +43,8 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 // The APP's OWN load order is the source of truth (persisted);
                 // it is only replaced by a new source-save import.
                 val appOrder = repository.getAppLoadOrder()
+                val categories = repository.getCategories()
+                val selectedCategoryId = repository.getSelectedCategoryId()
                 val automaticResult = if (saveUri == null && saveFileUri == null) {
                     repository.tryReadDefaultGameLoadOrder()
                 } else {
@@ -67,7 +70,11 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         gameLoadOrder = savedOrder?.mods ?: emptyList(),
                         sourceGameSaveUriStr = sourceSaveFileUri,
                         sourceGameLoadOrder = sourceOrder,
-                        appLoadOrder = appOrder
+                        appLoadOrder = appOrder,
+                        categories = categories,
+                        selectedCategoryId = selectedCategoryId
+                            ?.takeIf { id -> categories.any { it.id == id } }
+                            ?: categories.first().id
                     )
                 }
 
@@ -621,6 +628,101 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun selectMod(mod: Mod?) {
         _uiState.update { it.copy(selectedMod = mod) }
+    }
+
+    fun selectCategory(categoryId: String) {
+        if (_uiState.value.categories.none { it.id == categoryId }) return
+        _uiState.update { it.copy(selectedCategoryId = categoryId) }
+        viewModelScope.launch { repository.saveSelectedCategoryId(categoryId) }
+    }
+
+    fun addCategory(name: String) {
+        val cleanName = name.trim()
+        if (cleanName.isEmpty()) return
+        val state = _uiState.value
+        if (state.categories.any { it.name.equals(cleanName, ignoreCase = true) }) return
+        val category = ModCategory(
+            id = "custom_${System.currentTimeMillis()}",
+            name = cleanName
+        )
+        val categories = state.categories + category
+        _uiState.update { it.copy(categories = categories, selectedCategoryId = category.id) }
+        viewModelScope.launch {
+            repository.saveCategories(categories)
+            repository.saveSelectedCategoryId(category.id)
+        }
+    }
+
+    fun renameCustomCategory(categoryId: String, name: String) {
+        val cleanName = name.trim()
+        val state = _uiState.value
+        val category = state.categories.firstOrNull { it.id == categoryId } ?: return
+        if (category.builtIn || cleanName.isEmpty()) return
+        if (state.categories.any { it.id != categoryId && it.name.equals(cleanName, ignoreCase = true) }) return
+        val categories = state.categories.map {
+            if (it.id == categoryId) it.copy(name = cleanName) else it
+        }
+        _uiState.update { it.copy(categories = categories) }
+        viewModelScope.launch { repository.saveCategories(categories) }
+    }
+
+    fun setCategoryColor(categoryId: String, colorHex: String) {
+        val state = _uiState.value
+        if (state.categories.none { it.id == categoryId }) return
+        val categories = state.categories.map {
+            if (it.id == categoryId) it.copy(colorHex = colorHex) else it
+        }
+        _uiState.update { it.copy(categories = categories) }
+        viewModelScope.launch { repository.saveCategories(categories) }
+    }
+
+    fun resetCategoryColor(categoryId: String) {
+        setCategoryColor(categoryId, ModCategory.DEFAULT_COLOR_HEX)
+    }
+
+    fun moveCategoryUp(categoryId: String) {
+        moveCustomCategory(categoryId, -1)
+    }
+
+    fun moveCategoryDown(categoryId: String) {
+        moveCustomCategory(categoryId, 1)
+    }
+
+    fun resetBuiltInCategoryOrder() {
+        val state = _uiState.value
+        val builtInById = state.categories.filter { it.builtIn }.associateBy { it.id }
+        val custom = state.categories.filterNot { it.builtIn }
+        val categories = ModCategory.BUILT_IN.mapNotNull { builtInById[it.id] } + custom
+        _uiState.update { it.copy(categories = categories) }
+        viewModelScope.launch { repository.saveCategories(categories) }
+    }
+
+    private fun moveCustomCategory(categoryId: String, direction: Int) {
+        val state = _uiState.value
+        val index = state.categories.indexOfFirst { it.id == categoryId }
+        if (index < 0) return
+        val target = index + direction
+        if (target < 0 || target >= state.categories.size) return
+        val categories = state.categories.toMutableList().apply {
+            add(target, removeAt(index))
+        }
+        _uiState.update { it.copy(categories = categories) }
+        viewModelScope.launch { repository.saveCategories(categories) }
+    }
+
+    fun removeCustomCategory(categoryId: String) {
+        val state = _uiState.value
+        val category = state.categories.firstOrNull { it.id == categoryId } ?: return
+        if (category.builtIn) return
+        val categories = state.categories.filterNot { it.id == categoryId }
+        val selectedId = if (state.selectedCategoryId == categoryId) {
+            categories.firstOrNull()?.id ?: ModCategory.BUILT_IN.first().id
+        } else state.selectedCategoryId
+        _uiState.update { it.copy(categories = categories, selectedCategoryId = selectedId) }
+        viewModelScope.launch {
+            repository.saveCategories(categories)
+            repository.saveSelectedCategoryId(selectedId)
+        }
     }
 
     fun setSearchQuery(query: String) {

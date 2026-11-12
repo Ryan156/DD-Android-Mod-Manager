@@ -6,6 +6,7 @@ import com.darkestdungeon.modmanager.LoadOrderResult
 import com.darkestdungeon.modmanager.ModManagerRepository
 import com.darkestdungeon.modmanager.TransferPlan
 import com.darkestdungeon.modmanager.data.model.Mod
+import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.data.storage.ModStorageManager
 import com.darkestdungeon.modmanager.data.storage.ParsedSave
 import com.darkestdungeon.modmanager.data.storage.SaveFormatException
@@ -14,6 +15,8 @@ import com.darkestdungeon.modmanager.data.storage.dson.DsonModListEditor
 import com.darkestdungeon.modmanager.data.storage.dson.DsonModRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 
 class ModRepository(private val context: Context) {
@@ -30,6 +33,8 @@ class ModRepository(private val context: Context) {
         const val PREF_SOURCE_SAVE_FILE_URI = "source_game_save_file_uri"
         const val DEFAULT_SAVE_FILE = "/storage/emulated/0/Android/Data/com.darkestdungeon/files/persist.game.json"
         const val PREF_APP_LOAD_ORDER = "app_load_order"
+        const val PREF_CATEGORIES = "mod_categories"
+        const val PREF_SELECTED_CATEGORY = "selected_category"
         private const val SEP = "\u0000"
 
         fun getDefaultModDirectory(context: Context): String {
@@ -93,6 +98,78 @@ class ModRepository(private val context: Context) {
 
     suspend fun saveAppLoadOrder(order: List<String>) = withContext(Dispatchers.IO) {
         prefs.edit().putString(PREF_APP_LOAD_ORDER, order.joinToString(SEP)).apply()
+    }
+
+    suspend fun getCategories(): List<ModCategory> = withContext(Dispatchers.IO) {
+        val stored = prefs.getString(PREF_CATEGORIES, null) ?: return@withContext ModCategory.defaults()
+        runCatching {
+            val json = JSONArray(stored)
+            val builtInsById = ModCategory.BUILT_IN.associateBy { it.id }
+            val savedBuiltIns = buildMap {
+                for (index in 0 until json.length()) {
+                    val item = json.optJSONObject(index) ?: continue
+                    val id = item.optString("id").trim()
+                    if (id in builtInsById) put(id, item)
+                }
+            }
+            val builtIns = builtInsById.mapValues { (id, category) ->
+                category.copy(
+                    colorHex = savedBuiltIns[id]?.optString("colorHex")
+                        ?.takeIf { it.isNotBlank() }
+                        ?: category.colorHex
+                )
+            }
+            val categories = buildList {
+                val seen = mutableSetOf<String>()
+                for (index in 0 until json.length()) {
+                    val item = json.optJSONObject(index) ?: continue
+                    val id = item.optString("id").trim()
+                    if (id.isEmpty() || !seen.add(id)) continue
+                    val builtIn = builtIns[id]
+                    if (builtIn != null) {
+                        add(builtIn)
+                    } else if (!item.optBoolean("builtIn", false)) {
+                        val name = item.optString("name").trim()
+                        if (name.isNotEmpty()) {
+                            add(
+                                ModCategory(
+                                    id = id,
+                                    name = name,
+                                    colorHex = item.optString("colorHex", ModCategory.DEFAULT_COLOR_HEX),
+                                    builtIn = false
+                                )
+                            )
+                        }
+                    }
+                }
+                ModCategory.BUILT_IN.forEach { category ->
+                    if (seen.add(category.id)) add(builtIns.getValue(category.id))
+                }
+            }
+            categories
+        }.getOrElse { ModCategory.defaults() }
+    }
+
+    suspend fun saveCategories(categories: List<ModCategory>) = withContext(Dispatchers.IO) {
+        val json = JSONArray()
+        categories.forEach { category ->
+            json.put(
+                JSONObject()
+                    .put("id", category.id)
+                    .put("name", category.name)
+                    .put("colorHex", category.colorHex)
+                    .put("builtIn", category.builtIn)
+            )
+        }
+        prefs.edit().putString(PREF_CATEGORIES, json.toString()).apply()
+    }
+
+    suspend fun getSelectedCategoryId(): String? = withContext(Dispatchers.IO) {
+        prefs.getString(PREF_SELECTED_CATEGORY, ModCategory.BUILT_IN.first().id)
+    }
+
+    suspend fun saveSelectedCategoryId(categoryId: String) = withContext(Dispatchers.IO) {
+        prefs.edit().putString(PREF_SELECTED_CATEGORY, categoryId).apply()
     }
 
     suspend fun readGameLoadOrder(uriStr: String): LoadOrderResult =

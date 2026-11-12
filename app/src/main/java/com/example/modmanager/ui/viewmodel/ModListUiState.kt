@@ -1,6 +1,7 @@
 package com.darkestdungeon.modmanager.ui.viewmodel
 
 import com.darkestdungeon.modmanager.data.model.Mod
+import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.ui.viewmodel.ModManagerViewModel.TransferReport
 
 data class ModListUiState(
@@ -19,6 +20,8 @@ data class ModListUiState(
     val selectedFolderModIds: Set<String> = emptySet(),
     /** Active-tab selection for grouped load-order moves. */
     val selectedActiveModIds: Set<String> = emptySet(),
+    val categories: List<ModCategory> = ModCategory.defaults(),
+    val selectedCategoryId: String = ModCategory.BUILT_IN.first().id,
     val selectedMod: Mod? = null,
     val searchQuery: String = "",
     val selectedTagFilter: String? = null,

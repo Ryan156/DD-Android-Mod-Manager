@@ -210,6 +210,35 @@ fun ModManagerApp(
                     onClearStatus = {
                         viewModel.clearStatus()
                     },
+                    categories = uiState.categories,
+                    selectedCategoryId = uiState.selectedCategoryId,
+                    onSelectCategory = { categoryId ->
+                        viewModel.selectCategory(categoryId)
+                    },
+                    onAddCategory = { name ->
+                        viewModel.addCategory(name)
+                    },
+                    onRenameCategory = { categoryId, name ->
+                        viewModel.renameCustomCategory(categoryId, name)
+                    },
+                    onMoveCategoryUp = { categoryId ->
+                        viewModel.moveCategoryUp(categoryId)
+                    },
+                    onMoveCategoryDown = { categoryId ->
+                        viewModel.moveCategoryDown(categoryId)
+                    },
+                    onResetBuiltInCategoryOrder = {
+                        viewModel.resetBuiltInCategoryOrder()
+                    },
+                    onSetCategoryColor = { categoryId, colorHex ->
+                        viewModel.setCategoryColor(categoryId, colorHex)
+                    },
+                    onResetCategoryColor = { categoryId ->
+                        viewModel.resetCategoryColor(categoryId)
+                    },
+                    onRemoveCategory = { categoryId ->
+                        viewModel.removeCustomCategory(categoryId)
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
             }

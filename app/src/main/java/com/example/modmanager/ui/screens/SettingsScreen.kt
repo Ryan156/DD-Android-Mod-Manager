@@ -1,6 +1,9 @@
 package com.darkestdungeon.modmanager.ui.screens
 
+import android.graphics.Color as AndroidColor
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,7 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -24,12 +29,14 @@ import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Icon
@@ -39,6 +46,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -49,9 +57,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.ui.theme.DDAndroidModManagerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,9 +90,23 @@ fun SettingsScreen(
     statusMessage: String? = null,
     onClearError: () -> Unit = {},
     onClearStatus: () -> Unit = {},
+    categories: List<ModCategory> = ModCategory.defaults(),
+    selectedCategoryId: String = ModCategory.BUILT_IN.first().id,
+    onSelectCategory: (String) -> Unit = {},
+    onAddCategory: (String) -> Unit = {},
+    onRenameCategory: (String, String) -> Unit = { _, _ -> },
+    onMoveCategoryUp: (String) -> Unit = {},
+    onMoveCategoryDown: (String) -> Unit = {},
+    onResetBuiltInCategoryOrder: () -> Unit = {},
+    onSetCategoryColor: (String, String) -> Unit = { _, _ -> },
+    onResetCategoryColor: (String) -> Unit = {},
+    onRemoveCategory: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var pathInput by remember(activeFolderPath) { mutableStateOf(activeFolderPath) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var renameCategory by remember { mutableStateOf<ModCategory?>(null) }
+    var colorCategory by remember { mutableStateOf<ModCategory?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(errorMessage) {
@@ -232,6 +258,20 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            CategoryEditorCard(
+                categories = categories,
+                selectedCategoryId = selectedCategoryId,
+                onSelectCategory = onSelectCategory,
+                onAddCategory = { showAddCategoryDialog = true },
+                onRenameCategory = { renameCategory = it },
+                onMoveCategoryUp = onMoveCategoryUp,
+                onMoveCategoryDown = onMoveCategoryDown,
+                onResetBuiltInCategoryOrder = onResetBuiltInCategoryOrder,
+                onSetCategoryColor = { colorCategory = it },
+                onResetCategoryColor = onResetCategoryColor,
+                onRemoveCategory = onRemoveCategory
+            )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -421,7 +461,332 @@ fun SettingsScreen(
             }
         }
     }
+
+    if (showAddCategoryDialog) {
+        CategoryNameDialog(
+            title = "Add category",
+            confirmLabel = "Add",
+            onDismiss = { showAddCategoryDialog = false },
+            onConfirm = { name ->
+                onAddCategory(name)
+                showAddCategoryDialog = false
+            }
+        )
+    }
+
+    renameCategory?.let { category ->
+        CategoryNameDialog(
+            title = "Rename category",
+            initialName = category.name,
+            confirmLabel = "Rename",
+            onDismiss = { renameCategory = null },
+            onConfirm = { name ->
+                onRenameCategory(category.id, name)
+                renameCategory = null
+            }
+        )
+    }
+
+    colorCategory?.let { category ->
+        CategoryColorDialog(
+            category = category,
+            onDismiss = { colorCategory = null },
+            onApply = { color ->
+                onSetCategoryColor(category.id, color)
+                colorCategory = null
+            }
+        )
+    }
 }
+
+
+@Composable
+private fun CategoryEditorCard(
+    categories: List<ModCategory>,
+    selectedCategoryId: String,
+    onSelectCategory: (String) -> Unit,
+    onAddCategory: () -> Unit,
+    onRenameCategory: (ModCategory) -> Unit,
+    onMoveCategoryUp: (String) -> Unit,
+    onMoveCategoryDown: (String) -> Unit,
+    onResetBuiltInCategoryOrder: () -> Unit,
+    onSetCategoryColor: (ModCategory) -> Unit,
+    onResetCategoryColor: (String) -> Unit,
+    onRemoveCategory: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text("Edit Categories", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "Select a category to use in the mod lists. Built-in categories can be reordered and recolored, but cannot be renamed or removed. Custom categories support all editing actions.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onAddCategory,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("Add category")
+                }
+                OutlinedButton(
+                    onClick = onResetBuiltInCategoryOrder,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("Reset built-in order")
+                }
+            }
+
+            categories.forEachIndexed { index, category ->
+                val categoryColor = parseCategoryColor(category.colorHex)
+                val isSelected = category.id == selectedCategoryId
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectCategory(category.id) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceContainerLow
+                    ),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .background(categoryColor, RoundedCornerShape(6.dp))
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(category.name, fontWeight = FontWeight.Bold)
+                                Text(
+                                    if (category.builtIn) "Built-in" else "Custom",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                category.colorHex,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            TextButton(
+                                onClick = { onMoveCategoryUp(category.id) },
+                                enabled = index > 0
+                            ) { Text("Up") }
+                            TextButton(
+                                onClick = { onMoveCategoryDown(category.id) },
+                                enabled = index < categories.lastIndex
+                            ) { Text("Down") }
+                            TextButton(onClick = { onSetCategoryColor(category) }) { Text("Set color") }
+                            TextButton(onClick = { onResetCategoryColor(category.id) }) { Text("Reset") }
+                        }
+
+                        if (!category.builtIn) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = { onRenameCategory(category) },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("Rename") }
+                                OutlinedButton(
+                                    onClick = { onRemoveCategory(category.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) { Text("Remove") }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryNameDialog(
+    title: String,
+    initialName: String = "",
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Category name") },
+                singleLine = true
+            )
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name.trim()) },
+                enabled = name.trim().isNotEmpty()
+            ) { Text(confirmLabel) }
+        }
+    )
+}
+
+@Composable
+private fun CategoryColorDialog(
+    category: ModCategory,
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit
+) {
+    val initial = remember(category.colorHex) { parseCategoryColor(category.colorHex) }
+    val initialArgb = initial.toArgb()
+    var hue by remember(category.colorHex) {
+        mutableStateOf(FloatArray(3).also { AndroidColor.colorToHSV(initialArgb, it) }[0])
+    }
+    var saturation by remember(category.colorHex) {
+        mutableStateOf(FloatArray(3).also { AndroidColor.colorToHSV(initialArgb, it) }[1])
+    }
+    var luminosity by remember(category.colorHex) {
+        mutableStateOf(FloatArray(3).also { AndroidColor.colorToHSV(initialArgb, it) }[2])
+    }
+    var red by remember(category.colorHex) { mutableStateOf(AndroidColor.red(initialArgb).toFloat()) }
+    var green by remember(category.colorHex) { mutableStateOf(AndroidColor.green(initialArgb).toFloat()) }
+    var blue by remember(category.colorHex) { mutableStateOf(AndroidColor.blue(initialArgb).toFloat()) }
+    var hexInput by remember(category.colorHex) { mutableStateOf(category.colorHex) }
+
+    fun updateFromRgb(r: Float, g: Float, b: Float) {
+        red = r
+        green = g
+        blue = b
+        val hsv = FloatArray(3)
+        AndroidColor.RGBToHSV(r.toInt(), g.toInt(), b.toInt(), hsv)
+        hue = hsv[0]
+        saturation = hsv[1]
+        luminosity = hsv[2]
+        hexInput = rgbToHex(r.toInt(), g.toInt(), b.toInt())
+    }
+
+    fun updateFromHsv(h: Float = hue, s: Float = saturation, v: Float = luminosity) {
+        hue = h
+        saturation = s
+        luminosity = v
+        val argb = AndroidColor.HSVToColor(floatArrayOf(hue, saturation, luminosity))
+        red = AndroidColor.red(argb).toFloat()
+        green = AndroidColor.green(argb).toFloat()
+        blue = AndroidColor.blue(argb).toFloat()
+        hexInput = rgbToHex(red.toInt(), green.toInt(), blue.toInt())
+    }
+
+    val previewColor = Color(AndroidColor.HSVToColor(floatArrayOf(hue, saturation, luminosity)))
+    val validHex = parseCategoryColorOrNull(hexInput) != null
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Set color: " + category.name) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .background(previewColor, RoundedCornerShape(8.dp))
+                )
+                Text("Hue", style = MaterialTheme.typography.labelMedium)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(22.dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+                            ),
+                            RoundedCornerShape(8.dp)
+                        )
+                )
+                Slider(value = hue, onValueChange = { updateFromHsv(h = it) }, valueRange = 0f..360f)
+                Text("Saturation: " + saturation.toInt() + "%")
+                Slider(value = saturation, onValueChange = { updateFromHsv(s = it) }, valueRange = 0f..1f)
+                Text("Lum: " + luminosity.toInt() + "%")
+                Slider(value = luminosity, onValueChange = { updateFromHsv(v = it) }, valueRange = 0f..1f)
+                Text("Red: " + red.toInt())
+                Slider(value = red, onValueChange = { updateFromRgb(it, green, blue) }, valueRange = 0f..255f)
+                Text("Green: " + green.toInt())
+                Slider(value = green, onValueChange = { updateFromRgb(red, it, blue) }, valueRange = 0f..255f)
+                Text("Blue: " + blue.toInt())
+                Slider(value = blue, onValueChange = { updateFromRgb(red, green, it) }, valueRange = 0f..255f)
+                OutlinedTextField(
+                    value = hexInput,
+                    onValueChange = { value ->
+                        hexInput = value
+                        parseCategoryColorOrNull(value)?.let { parsed ->
+                            val argb = parsed.toArgb()
+                            updateFromRgb(
+                                AndroidColor.red(argb).toFloat(),
+                                AndroidColor.green(argb).toFloat(),
+                                AndroidColor.blue(argb).toFloat()
+                            )
+                        }
+                    },
+                    label = { Text("Hex color") },
+                    singleLine = true,
+                    supportingText = { Text("Use #RRGGBB or #AARRGGBB") }
+                )
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = {
+            TextButton(onClick = { onApply(hexInput.uppercase()) }, enabled = validHex) {
+                Text("Apply")
+            }
+        }
+    )
+}
+
+private fun parseCategoryColor(hex: String): Color =
+    parseCategoryColorOrNull(hex) ?: Color.White
+
+private fun parseCategoryColorOrNull(hex: String): Color? =
+    runCatching { Color(AndroidColor.parseColor(hex.trim())) }.getOrNull()
+
+private fun rgbToHex(red: Int, green: Int, blue: Int): String =
+    "#%02X%02X%02X".format(red.coerceIn(0, 255), green.coerceIn(0, 255), blue.coerceIn(0, 255))
 
 @Preview(showBackground = true)
 @Composable
