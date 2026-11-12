@@ -80,9 +80,10 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
                 // Scan mods
                 val scanned = repository.scanMods(path, uriStr)
+                val categorized = repository.applyStoredModCategories(scanned, _uiState.value.categories)
                 _uiState.update {
                     it.copy(
-                        mods = orderModsForGame(scanned, it.displayedGameLoadOrder),
+                        mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
                         selectedMod = scanned.firstOrNull()
                     )
@@ -185,11 +186,12 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 val path = _uiState.value.activeFolderPath
                 val uriStr = _uiState.value.activeFolderUriStr
                 val scanned = repository.scanMods(path, uriStr)
+                val categorized = repository.applyStoredModCategories(scanned, _uiState.value.categories)
                 _uiState.update {
                     it.copy(
-                        mods = orderModsForGame(scanned, it.displayedGameLoadOrder),
+                        mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
-                        selectedMod = scanned.find { m -> m.id == it.selectedMod?.id } ?: scanned.firstOrNull()
+                        selectedMod = categorized.find { m -> m.id == it.selectedMod?.id } ?: categorized.firstOrNull()
                     )
                 }
             } catch (e: Exception) {
@@ -298,6 +300,62 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { it.copy(selectedFolderModIds = emptySet()) }
     }
 
+    fun assignSelectedModsToCategory(categoryId: String?) {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val selectedIds = state.selectedFolderModIds
+            if (selectedIds.isEmpty()) return@launch
+            val updatedMods = state.mods.map { mod ->
+                if (mod.id in selectedIds) mod.copy(categoryId = categoryId) else mod
+            }
+            repository.saveModCategoryAssignments(selectedIds.associateWith { categoryId })
+            _uiState.update {
+                it.copy(
+                    mods = updatedMods,
+                    selectedFolderModIds = emptySet()
+                )
+            }
+        }
+    }
+
+    fun autoCategorizeMods() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val result = repository.autoCategorizeUnassignedMods(state.mods, state.categories)
+            _uiState.update {
+                it.copy(
+                    mods = result.mods,
+                    categoryAssignmentReport = CategoryAssignmentReport(
+                        assignedCount = result.assignedCount,
+                        unassignedModNames = result.mods
+                            .filter { mod -> mod.categoryId == null }
+                            .map { mod -> mod.title }
+                            .sorted()
+                    )
+                )
+            }
+        }
+    }
+
+    fun autoSortMods() {
+        val state = _uiState.value
+        val categoryOrder = state.categories.mapIndexed { index, category -> category.id to index }.toMap()
+        val sorted = state.mods.sortedWith(
+            compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                .thenBy { it.title.lowercase() }
+        )
+        _uiState.update {
+            it.copy(
+                mods = sorted,
+                statusMessage = "Mods sorted by the current category order."
+            )
+        }
+    }
+
+    fun clearCategoryAssignmentReport() {
+        _uiState.update { it.copy(categoryAssignmentReport = null) }
+    }
+
     fun setActiveModSelected(modId: String, selected: Boolean) {
         _uiState.update { state ->
             val next = state.selectedActiveModIds.toMutableSet()
@@ -372,22 +430,29 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun enableAllMods() {
         viewModelScope.launch {
-            // ORDER-ONLY: every installed mod joins the app order (append,
-            // current list order preserved for existing entries).
+            // ORDER-ONLY: enable every installed mod in the same category
+            // order shown by the folder tab. Existing save names are reused
+            // where they match, while new entries use the installed title.
             val state = _uiState.value
-            val order = state.appLoadOrder
+            val currentOrder = state.appLoadOrder
                 .ifEmpty { state.displayedGameLoadOrder }
-                .toMutableList()
+            val categoryOrder = state.categories
+                .mapIndexed { index, category -> category.id to index }
+                .toMap()
+            val folderOrder = state.mods.sortedWith(
+                compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                    .thenBy { it.title.lowercase() }
+            )
             fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
-            state.mods.forEach { mod ->
-                val already = order.any { saved ->
-                    val normalizedSaved = normalized(saved)
+            fun savedNameFor(mod: Mod): String {
+                return currentOrder.firstOrNull { saved ->
                     listOf(mod.title, mod.folderName, mod.id)
                         .map(::normalized)
-                        .any { it == normalizedSaved }
-                }
-                if (!already) order += mod.title
+                        .any { it == normalized(saved) }
+                } ?: mod.title
             }
+            val order = folderOrder.map(::savedNameFor)
+
             repository.saveAppLoadOrder(order)
             _uiState.update {
                 it.copy(
@@ -718,7 +783,14 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         val selectedId = if (state.selectedCategoryId == categoryId) {
             categories.firstOrNull()?.id ?: ModCategory.BUILT_IN.first().id
         } else state.selectedCategoryId
-        _uiState.update { it.copy(categories = categories, selectedCategoryId = selectedId) }
+        _uiState.update {
+            it.copy(
+                categories = categories,
+                selectedCategoryId = selectedId,
+                selectedCategoryFilterId = if (state.selectedCategoryFilterId == categoryId) null
+                else state.selectedCategoryFilterId
+            )
+        }
         viewModelScope.launch {
             repository.saveCategories(categories)
             repository.saveSelectedCategoryId(selectedId)
@@ -727,6 +799,11 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun setSearchQuery(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun setCategoryFilter(categoryId: String?) {
+        if (categoryId != null && categoryId != UNASSIGNED_CATEGORY_FILTER_ID && _uiState.value.categories.none { it.id == categoryId }) return
+        _uiState.update { it.copy(selectedCategoryFilterId = categoryId) }
     }
 
     fun setTagFilter(tag: String?) {

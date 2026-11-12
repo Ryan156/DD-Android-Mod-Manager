@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,6 +66,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.ui.theme.DDAndroidModManagerTheme
+import com.darkestdungeon.modmanager.ui.viewmodel.CategoryAssignmentReport
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,6 +100,10 @@ fun SettingsScreen(
     onMoveCategoryUp: (String) -> Unit = {},
     onMoveCategoryDown: (String) -> Unit = {},
     onResetBuiltInCategoryOrder: () -> Unit = {},
+    onAutoCategorize: () -> Unit = {},
+    onAutoSort: () -> Unit = {},
+    categoryAssignmentReport: CategoryAssignmentReport? = null,
+    onClearCategoryAssignmentReport: () -> Unit = {},
     onSetCategoryColor: (String, String) -> Unit = { _, _ -> },
     onResetCategoryColor: (String) -> Unit = {},
     onRemoveCategory: (String) -> Unit = {},
@@ -108,6 +114,47 @@ fun SettingsScreen(
     var renameCategory by remember { mutableStateOf<ModCategory?>(null) }
     var colorCategory by remember { mutableStateOf<ModCategory?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    categoryAssignmentReport?.let { report ->
+        AlertDialog(
+            onDismissRequest = onClearCategoryAssignmentReport,
+            confirmButton = {
+                TextButton(onClick = onClearCategoryAssignmentReport) { Text("Done") }
+            },
+            title = { Text("Auto categorize") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        if (report.assignedCount == 0) {
+                            "No confident matches"
+                        } else {
+                            "Assigned ${report.assignedCount} mods"
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (report.unassignedModNames.isNotEmpty()) {
+                        Text(
+                            "Still [Unassigned] (${report.unassignedModNames.size})",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 320.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            report.unassignedModNames.forEach { name ->
+                                Text("• $name", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
@@ -268,6 +315,8 @@ fun SettingsScreen(
                 onMoveCategoryUp = onMoveCategoryUp,
                 onMoveCategoryDown = onMoveCategoryDown,
                 onResetBuiltInCategoryOrder = onResetBuiltInCategoryOrder,
+                onAutoCategorize = onAutoCategorize,
+                onAutoSort = onAutoSort,
                 onSetCategoryColor = { colorCategory = it },
                 onResetCategoryColor = onResetCategoryColor,
                 onRemoveCategory = onRemoveCategory
@@ -510,6 +559,8 @@ private fun CategoryEditorCard(
     onMoveCategoryUp: (String) -> Unit,
     onMoveCategoryDown: (String) -> Unit,
     onResetBuiltInCategoryOrder: () -> Unit,
+    onAutoCategorize: () -> Unit,
+    onAutoSort: () -> Unit,
     onSetCategoryColor: (ModCategory) -> Unit,
     onResetCategoryColor: (String) -> Unit,
     onRemoveCategory: (String) -> Unit
@@ -551,6 +602,26 @@ private fun CategoryEditorCard(
                 ) {
                     Text("Reset built-in order")
                 }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onAutoCategorize,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) { Text("Auto categorize") }
+                OutlinedButton(
+                    onClick = onAutoSort,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) { Text("Auto sort") }
             }
 
             categories.forEachIndexed { index, category ->

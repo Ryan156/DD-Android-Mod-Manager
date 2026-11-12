@@ -101,6 +101,9 @@ fun ModManagerApp(
                     onDisableSelectedMods = {
                         viewModel.disableSelectedMods()
                     },
+                    onAssignSelectedMods = { categoryId ->
+                        viewModel.assignSelectedModsToCategory(categoryId)
+                    },
                     onClearFolderSelection = {
                         viewModel.clearFolderModSelection()
                     },
@@ -124,6 +127,9 @@ fun ModManagerApp(
                     },
                     onSearchQueryChange = { query ->
                         viewModel.setSearchQuery(query)
+                    },
+                    onCategoryFilterChange = { categoryId ->
+                        viewModel.setCategoryFilter(categoryId)
                     },
                     onRescanMods = {
                         viewModel.scanMods()
@@ -209,6 +215,16 @@ fun ModManagerApp(
                     },
                     onClearStatus = {
                         viewModel.clearStatus()
+                    },
+                    categoryAssignmentReport = uiState.categoryAssignmentReport,
+                    onClearCategoryAssignmentReport = {
+                        viewModel.clearCategoryAssignmentReport()
+                    },
+                    onAutoCategorize = {
+                        viewModel.autoCategorizeMods()
+                    },
+                    onAutoSort = {
+                        viewModel.autoSortMods()
                     },
                     categories = uiState.categories,
                     selectedCategoryId = uiState.selectedCategoryId,

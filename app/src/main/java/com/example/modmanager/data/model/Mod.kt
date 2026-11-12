@@ -19,7 +19,9 @@ data class Mod(
     val language: String? = null,
     val gameVersion: String? = null,
     val lastModified: Long = 0L,
-    val hasPreviewImage: Boolean = false
+    val hasPreviewImage: Boolean = false,
+    /** Persisted folder-tab category assignment; null means [Unassigned]. */
+    val categoryId: String? = null
 )
 
 data class ModMetadata(

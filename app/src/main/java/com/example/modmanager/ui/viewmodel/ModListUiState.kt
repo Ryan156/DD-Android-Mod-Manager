@@ -4,6 +4,13 @@ import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.ui.viewmodel.ModManagerViewModel.TransferReport
 
+const val UNASSIGNED_CATEGORY_FILTER_ID = "__unassigned__"
+
+data class CategoryAssignmentReport(
+    val assignedCount: Int,
+    val unassignedModNames: List<String>
+)
+
 data class ModListUiState(
     val mods: List<Mod> = emptyList(),
     val isLoading: Boolean = false,
@@ -24,12 +31,15 @@ data class ModListUiState(
     val selectedCategoryId: String = ModCategory.BUILT_IN.first().id,
     val selectedMod: Mod? = null,
     val searchQuery: String = "",
+    /** null means All categories; otherwise filters every mod list tab. */
+    val selectedCategoryFilterId: String? = null,
     val selectedTagFilter: String? = null,
     val enabledFilter: Boolean? = null, // null = All, true = Enabled, false = Disabled
     val isTransferring: Boolean = false,
     val transferReport: TransferReport? = null,
     /** Transient non-error status (e.g. "save written") — shown in the snackbar. */
-    val statusMessage: String? = null
+    val statusMessage: String? = null,
+    val categoryAssignmentReport: CategoryAssignmentReport? = null
 ) {
     /** Display classification order: app order wins, else source save, else target save. */
     val displayedGameLoadOrder: List<String>
@@ -37,23 +47,22 @@ data class ModListUiState(
 
     val filteredMods: List<Mod>
         get() = mods.filter { mod ->
-            val matchesQuery = searchQuery.isBlank() ||
-                    mod.title.contains(searchQuery, ignoreCase = true) ||
-                    mod.author.contains(searchQuery, ignoreCase = true) ||
-                    mod.description.contains(searchQuery, ignoreCase = true) ||
-                    mod.folderName.contains(searchQuery, ignoreCase = true)
-
-            val matchesEnabled = enabledFilter == null || mod.isEnabled == enabledFilter
-
-            matchesQuery && matchesEnabled
+            matchesSearch(mod) && (enabledFilter == null || mod.isEnabled == enabledFilter)
         }
 
-    private fun matchesSearch(mod: Mod): Boolean =
-        searchQuery.isBlank() ||
+    private fun matchesSearch(mod: Mod): Boolean {
+        val matchesCategory = when (selectedCategoryFilterId) {
+            null -> true
+            UNASSIGNED_CATEGORY_FILTER_ID -> mod.categoryId == null
+            else -> mod.categoryId == selectedCategoryFilterId
+        }
+        val matchesQuery = searchQuery.isBlank() ||
             mod.title.contains(searchQuery, ignoreCase = true) ||
             mod.author.contains(searchQuery, ignoreCase = true) ||
             mod.description.contains(searchQuery, ignoreCase = true) ||
             mod.folderName.contains(searchQuery, ignoreCase = true)
+        return matchesCategory && matchesQuery
+    }
 
     private fun gamePosition(mod: Mod): Int {
         val candidates = listOf(mod.title, mod.folderName, mod.id)
@@ -66,8 +75,17 @@ data class ModListUiState(
         }
     }
 
+    /** Folder view is grouped by the user-configured category order. */
     val folderMods: List<Mod>
-        get() = mods.filter(::matchesSearch)
+        get() {
+            val categoryOrder = categories.mapIndexed { index, category -> category.id to index }.toMap()
+            return mods
+                .filter(::matchesSearch)
+                .sortedWith(
+                    compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                        .thenBy { it.title.lowercase() }
+                )
+        }
 
     /** Active = present in the current source-of-truth order, in that order. */
     val activeMods: List<Mod>

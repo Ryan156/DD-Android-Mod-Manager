@@ -35,6 +35,7 @@ class ModRepository(private val context: Context) {
         const val PREF_APP_LOAD_ORDER = "app_load_order"
         const val PREF_CATEGORIES = "mod_categories"
         const val PREF_SELECTED_CATEGORY = "selected_category"
+        const val PREF_MOD_CATEGORY_ASSIGNMENTS = "mod_category_assignments"
         private const val SEP = "\u0000"
 
         fun getDefaultModDirectory(context: Context): String {
@@ -438,6 +439,97 @@ class ModRepository(private val context: Context) {
         if (!file.isFile) return@withContext null
         runCatching { LoadOrderResult(com.darkestdungeon.modmanager.data.storage.SaveParser.loadOrder(file.readBytes())) }
             .getOrElse { e -> LoadOrderResult(emptyList(), e.message ?: "The save file could not be parsed") }
+    }
+
+    /**
+     * Applies saved folder-tab category assignments. Mods without an existing
+     * assignment are classified once from their metadata keywords and then
+     * persisted, so later rescans never overwrite a user's manual choice.
+     */
+    suspend fun applyStoredModCategories(
+        mods: List<Mod>,
+        categories: List<ModCategory>
+    ): List<Mod> = withContext(Dispatchers.IO) {
+        val stored = readModCategoryAssignments().toMutableMap()
+        val builtInIds = categories.filter { it.builtIn }.map { it.id }.toSet()
+        val updated = mods.map { mod ->
+            val saved = stored[mod.id]
+            val categoryId = if (stored.containsKey(mod.id)) {
+                saved?.takeIf { it.isNotBlank() && (it in builtInIds || categories.any { category -> category.id == it }) }
+            } else {
+                autoCategoryId(mod, categories)
+            }
+            if (!stored.containsKey(mod.id)) stored[mod.id] = categoryId.orEmpty()
+            mod.copy(categoryId = categoryId)
+        }
+        saveModCategoryAssignments(stored)
+        updated
+    }
+
+    suspend fun saveModCategoryAssignments(assignments: Map<String, String?>) = withContext(Dispatchers.IO) {
+        val merged = readModCategoryAssignments().toMutableMap()
+        assignments.forEach { (modId, categoryId) -> merged[modId] = categoryId.orEmpty() }
+        val json = JSONObject()
+        merged.forEach { (modId, categoryId) -> json.put(modId, categoryId) }
+        prefs.edit().putString(PREF_MOD_CATEGORY_ASSIGNMENTS, json.toString()).apply()
+    }
+
+    data class AutoCategoryResult(
+        val mods: List<Mod>,
+        val assignedCount: Int
+    )
+
+    /** Assigns only currently unassigned mods; manual assignments are preserved. */
+    suspend fun autoCategorizeUnassignedMods(
+        mods: List<Mod>,
+        categories: List<ModCategory>
+    ): AutoCategoryResult = withContext(Dispatchers.IO) {
+        val assignments = readModCategoryAssignments().toMutableMap()
+        var assignedCount = 0
+        val updated = mods.map { mod ->
+            if (mod.categoryId != null) {
+                mod
+            } else {
+                val categoryId = autoCategoryId(mod, categories)
+                if (categoryId != null) {
+                    assignments[mod.id] = categoryId
+                    assignedCount++
+                }
+                mod.copy(categoryId = categoryId)
+            }
+        }
+        saveModCategoryAssignments(assignments)
+        AutoCategoryResult(updated, assignedCount)
+    }
+
+    private fun readModCategoryAssignments(): Map<String, String> {
+        val raw = prefs.getString(PREF_MOD_CATEGORY_ASSIGNMENTS, null) ?: return emptyMap()
+        return runCatching {
+            val json = JSONObject(raw)
+            buildMap {
+                json.keys().forEach { key -> put(key, json.optString(key)) }
+            }
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun autoCategoryId(mod: Mod, categories: List<ModCategory>): String? {
+        val searchable = (listOf(mod.title, mod.folderName, mod.description) + mod.tags)
+            .joinToString(" ")
+            .lowercase()
+        val patterns = listOf(
+            "ui" to listOf("ui", "interface", "quality of life", "qol"),
+            "districts" to listOf("district"),
+            "dungeons" to listOf("dungeon"),
+            "quirks" to listOf("quirk"),
+            "trinkets" to listOf("trinket"),
+            "enemies" to listOf("enemy", "enemies"),
+            "class_patch" to listOf("class patch", "classpatch"),
+            "class" to listOf("class", "hero"),
+            "skins" to listOf("skin", "skins")
+        )
+        return patterns.firstOrNull { (id, words) ->
+            id in categories.map { it.id } && words.any(searchable::contains)
+        }?.first
     }
 
     suspend fun scanMods(targetPath: String? = null, uriStr: String? = null): List<Mod> = withContext(Dispatchers.IO) {

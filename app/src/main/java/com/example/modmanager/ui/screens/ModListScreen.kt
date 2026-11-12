@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +26,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,11 +63,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.Mod
+import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.ui.components.FolderModCard
 import com.darkestdungeon.modmanager.ui.components.ModCard
 import com.darkestdungeon.modmanager.ui.components.SearchBarAndFilter
 import com.darkestdungeon.modmanager.ui.theme.DDAndroidModManagerTheme
 import com.darkestdungeon.modmanager.ui.viewmodel.ModListUiState
+import com.darkestdungeon.modmanager.ui.viewmodel.UNASSIGNED_CATEGORY_FILTER_ID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +81,7 @@ fun ModListScreen(
     onFolderModSelectionChanged: (String, Boolean) -> Unit,
     onEnableSelectedMods: () -> Unit,
     onDisableSelectedMods: () -> Unit,
+    onAssignSelectedMods: (String?) -> Unit,
     onClearFolderSelection: () -> Unit,
     onActiveModSelectionChanged: (String, Boolean) -> Unit,
     onMoveSelectedActiveModsToPosition: (Int) -> Unit,
@@ -82,6 +90,7 @@ fun ModListScreen(
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
     onSearchQueryChange: (String) -> Unit,
+    onCategoryFilterChange: (String?) -> Unit,
     onRescanMods: () -> Unit,
     onClearError: () -> Unit,
     onClearStatus: () -> Unit,
@@ -90,6 +99,7 @@ fun ModListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var activeDestinationInput by rememberSaveable { mutableStateOf("") }
+    var showCategoryPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
@@ -136,6 +146,46 @@ fun ModListScreen(
 
     if (uiState.isTransferring) {
         CircularProgressIndicator()
+    }
+
+    if (showCategoryPicker) {
+        AlertDialog(
+            onDismissRequest = { showCategoryPicker = false },
+            confirmButton = {
+                TextButton(onClick = { showCategoryPicker = false }) { Text("Cancel") }
+            },
+            title = { Text("Assign category") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        "Choose a category for the selected folder mods.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    uiState.categories.forEach { category ->
+                        TextButton(
+                            onClick = {
+                                onAssignSelectedMods(category.id)
+                                showCategoryPicker = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(category.name, textAlign = TextAlign.Start) }
+                    }
+                    TextButton(
+                        onClick = {
+                            onAssignSelectedMods(null)
+                            showCategoryPicker = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("[Unassigned]", textAlign = TextAlign.Start) }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -224,10 +274,23 @@ fun ModListScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (selectedTab < 3) {
-                        SearchBarAndFilter(
-                            searchQuery = uiState.searchQuery,
-                            onSearchQueryChange = onSearchQueryChange
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            SearchBarAndFilter(
+                                searchQuery = uiState.searchQuery,
+                                onSearchQueryChange = onSearchQueryChange,
+                                modifier = Modifier.weight(1f)
+                            )
+                            CategoryFilterSelector(
+                                categories = uiState.categories,
+                                selectedCategoryId = uiState.selectedCategoryFilterId,
+                                onCategorySelected = onCategoryFilterChange,
+                                modifier = Modifier.width(132.dp)
+                            )
+                        }
                     }
                     if (selectedTab == 0) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -257,13 +320,19 @@ fun ModListScreen(
                                         onClick = onDisableSelectedMods,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Disable selected")
+                                        Text("Disable")
+                                    }
+                                    OutlinedButton(
+                                        onClick = { showCategoryPicker = true },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Assign")
                                     }
                                     Button(
                                         onClick = onEnableSelectedMods,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Enable selected")
+                                        Text("Enable")
                                     }
                                 }
                             }
@@ -414,7 +483,7 @@ fun ModListScreen(
                         itemsIndexed(
                             items = filteredList,
                             key = { _, item -> item.id }
-                        ) { _, mod ->
+                        ) { index, mod ->
                             // Active = present in the current load order (the
                             // source of truth used by the Active/Inactive tabs),
                             // NOT merely the folder's on-disk location.
@@ -430,15 +499,31 @@ fun ModListScreen(
                             } >= 0
 
                             if (selectedTab == 0) {
-                                FolderModCard(
-                                    mod = mod,
-                                    isActive = modIsActiveInOrder,
-                                    isSelected = mod.id in uiState.selectedFolderModIds,
-                                    onClick = { onNavigateToModDetail(mod) },
-                                    onSelectionChanged = { selected ->
-                                        onFolderModSelectionChanged(mod.id, selected)
+                                val previous = filteredList.getOrNull(index - 1)
+                                val categoryName = uiState.categories
+                                    .firstOrNull { it.id == mod.categoryId }
+                                    ?.name
+                                    ?: "[Unassigned]"
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    if (index == 0 || previous?.categoryId != mod.categoryId) {
+                                        Text(
+                                            text = categoryName,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(top = 4.dp)
+                                        )
                                     }
-                                )
+                                    FolderModCard(
+                                        mod = mod,
+                                        isActive = modIsActiveInOrder,
+                                        isSelected = mod.id in uiState.selectedFolderModIds,
+                                        onClick = { onNavigateToModDetail(mod) },
+                                        onSelectionChanged = { selected ->
+                                            onFolderModSelectionChanged(mod.id, selected)
+                                        }
+                                    )
+                                }
                             } else {
                                 // Button state follows the mod's position in
                                 // the APP ORDER (the source of truth), not the
@@ -505,6 +590,68 @@ fun ModListScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryFilterSelector(
+    categories: List<ModCategory>,
+    selectedCategoryId: String?,
+    onCategorySelected: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedName = categories.firstOrNull { it.id == selectedCategoryId }?.name
+        ?: if (selectedCategoryId == null) "All" else "[Unassigned]"
+
+    Box(modifier = modifier) {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Text(
+                text = selectedName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                DropdownMenuItem(
+                    text = { Text("All") },
+                    onClick = {
+                        onCategorySelected(null)
+                        expanded = false
+                    }
+                )
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category.name) },
+                        onClick = {
+                            onCategorySelected(category.id)
+                            expanded = false
+                        }
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text("[Unassigned]") },
+                    onClick = {
+                        onCategorySelected(UNASSIGNED_CATEGORY_FILTER_ID)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -656,6 +803,7 @@ fun ModListScreenPreview() {
             onFolderModSelectionChanged = { _, _ -> },
             onEnableSelectedMods = {},
             onDisableSelectedMods = {},
+            onAssignSelectedMods = {},
             onClearFolderSelection = {},
             onActiveModSelectionChanged = { _, _ -> },
             onMoveSelectedActiveModsToPosition = {},
@@ -664,6 +812,7 @@ fun ModListScreenPreview() {
             onMoveModUp = {},
             onMoveModDown = {},
             onSearchQueryChange = {},
+            onCategoryFilterChange = {},
             onRescanMods = {},
             onClearError = {},
             onClearStatus = {}
