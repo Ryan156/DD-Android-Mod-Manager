@@ -38,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Icon
@@ -158,14 +159,14 @@ fun SettingsScreen(
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Long)
             onClearError()
         }
     }
 
     LaunchedEffect(statusMessage) {
         statusMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Long)
             onClearStatus()
         }
     }

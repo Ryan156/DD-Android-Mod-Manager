@@ -38,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -103,14 +104,14 @@ fun ModListScreen(
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            snackbarHostState.showSnackbar(error, duration = SnackbarDuration.Long)
             onClearError()
         }
     }
 
     LaunchedEffect(uiState.statusMessage) {
         uiState.statusMessage?.let { status ->
-            snackbarHostState.showSnackbar(status)
+            snackbarHostState.showSnackbar(status, duration = SnackbarDuration.Long)
             onClearStatus()
         }
     }
@@ -127,6 +128,11 @@ fun ModListScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Matched source order: ${report.matched.size} mod(s)")
+                    Text(
+                        "Target save written successfully. A timestamped backup of the previous save was created alongside it.",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
                     if (report.appendedNotInSource.isNotEmpty()) {
                         Text(
                             "Appended at the end (not in source):\n" +
@@ -622,7 +628,8 @@ private fun CategoryFilterSelector(
         }
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.width(132.dp)
         ) {
             Column(
                 modifier = Modifier

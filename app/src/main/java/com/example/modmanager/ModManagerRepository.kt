@@ -10,6 +10,9 @@ import com.darkestdungeon.modmanager.data.storage.SaveParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class InstalledMod(
     val folderName: String,
@@ -97,8 +100,8 @@ class ModManagerRepository(private val context: Context) {
     }
 
     /**
-     * Writes [bytes] to the save file, creating a `.bak` backup of the current
-     * content first and verifying the written content by re-reading it.
+     * Writes [bytes] to the save file, creating a timestamped backup of the
+     * current content first and verifying the written content by re-reading it.
      * Returns an error string, or null on success.
      */
     suspend fun writeSaveBytes(fileUri: Uri, bytes: ByteArray): String? =
@@ -113,32 +116,57 @@ class ModManagerRepository(private val context: Context) {
             // 1. Read the current content and back it up.
             val original = resolver.openInputStream(actualUri)?.use { it.readBytes() }
                 ?: return@withContext "The save file could not be read"
-            val backupWarning = runCatching {
+
+            // Avoid the costly backup/write/verification round trip when a
+            // caller submits bytes identical to the current save. This also
+            // makes repeated UI updates effectively free without weakening
+            // verification for actual changes.
+            if (original.contentEquals(bytes)) return@withContext null
+
+            val backupWarning: String? = runCatching<String?> {
                 if (DocumentsContract.isTreeUri(fileUri)) {
-                    // Tree URI: sibling backup next to the save file.
-                    val backupName = "persist.game.json.bak"
-                    val backupUri = queryChildren(fileUri).firstOrNull { it.name == backupName }?.uri
-                        ?: DocumentsContract.createDocument(
-                            resolver,
-                            DocumentsContract.buildDocumentUriUsingTree(
-                                fileUri,
-                                DocumentsContract.getTreeDocumentId(fileUri)
-                            ),
-                            "application/octet-stream",
-                            backupName
-                        )
+                    // Tree URI: create a timestamped sibling backup next to
+                    // the save file. Never overwrite an earlier backup.
+                    val children = queryChildren(fileUri)
+                    val backupBase = "persist.game.json.bak.${backupTimestamp()}"
+                    var backupName = backupBase
+                    var suffix = 1
+                    while (children.any { it.name == backupName }) {
+                        backupName = "$backupBase-$suffix"
+                        suffix++
+                    }
+                    val backupUri = DocumentsContract.createDocument(
+                        resolver,
+                        DocumentsContract.buildDocumentUriUsingTree(
+                            fileUri,
+                            DocumentsContract.getTreeDocumentId(fileUri)
+                        ),
+                        "application/octet-stream",
+                        backupName
+                    )
                     if (backupUri == null) {
                         "Backup skipped: the .bak file could not be created in the save folder"
                     } else {
-                        resolver.openOutputStream(backupUri, "wt")?.use { it.write(original) }
-                        null
+                        val backupStream = resolver.openOutputStream(backupUri, "wt")
+                        if (backupStream == null) {
+                            "Backup failed: the backup file could not be opened for writing"
+                        } else {
+                            backupStream.use { it.write(original) }
+                            null
+                        }
                     }
                 } else {
                     // File URI: SAF grants no write access to the parent folder, so a
                     // sibling .bak is impossible. Fall back to the app's private dir.
                     val backupDir = File(context.filesDir, "save_backups")
                     if (!backupDir.exists()) backupDir.mkdirs()
-                    val backupFile = File(backupDir, "persist.game.json.bak")
+                    val backupBase = "persist.game.json.bak.${backupTimestamp()}"
+                    var backupFile = File(backupDir, backupBase)
+                    var suffix = 1
+                    while (backupFile.exists()) {
+                        backupFile = File(backupDir, "$backupBase-$suffix")
+                        suffix++
+                    }
                     backupFile.writeBytes(original)
                     null
                 }
@@ -157,13 +185,14 @@ class ModManagerRepository(private val context: Context) {
                 return@withContext "Verification failed: the save file content does not match what was written"
             }
 
-            // Backup failure is a warning, not a blocker: the reorder itself is
-            // provably length-preserving and re-verified above.
-            if (backupWarning != null) {
-                println("SAVE_BACKUP_WARNING: $backupWarning")
-            }
+            // Do not replace the save unless its fallback copy was created.
+            // This guarantees that a successful write always has a usable backup.
+            if (backupWarning != null) return@withContext backupWarning
             null
         }
+
+    private fun backupTimestamp(): String =
+        SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())
 
     /**
      * Finds the persist.game.json document URI inside a tree URI (or the file URI itself).

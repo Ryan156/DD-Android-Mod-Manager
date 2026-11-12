@@ -18,6 +18,21 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.Locale
+
+private val CATEGORY_SEPARATOR_REGEX = Regex("[^\\p{L}\\p{N}]+")
+private val WHITESPACE_REGEX = Regex("\\s+")
+private val CATEGORY_KEYWORDS = mapOf(
+    "ui" to listOf("ui", "interface", "quality of life", "qol"),
+    "districts" to listOf("district", "districts"),
+    "dungeons" to listOf("dungeon", "dungeons"),
+    "quirks" to listOf("quirk", "quirks"),
+    "trinkets" to listOf("trinket", "trinkets"),
+    "enemies" to listOf("enemy", "enemies", "monster", "monsters"),
+    "class_patch" to listOf("class patch", "classpatch", "patch"),
+    "class" to listOf("new class", "hero class", "class", "hero"),
+    "skins" to listOf("skin", "skins", "cosmetic", "cosmetics")
+)
 
 class ModRepository(private val context: Context) {
 
@@ -36,6 +51,8 @@ class ModRepository(private val context: Context) {
         const val PREF_CATEGORIES = "mod_categories"
         const val PREF_SELECTED_CATEGORY = "selected_category"
         const val PREF_MOD_CATEGORY_ASSIGNMENTS = "mod_category_assignments"
+        private const val PREF_CATEGORY_CLASSIFIER_VERSION = "category_classifier_version"
+        private const val CATEGORY_CLASSIFIER_VERSION = 2
         private const val SEP = "\u0000"
 
         fun getDefaultModDirectory(context: Context): String {
@@ -451,18 +468,30 @@ class ModRepository(private val context: Context) {
         categories: List<ModCategory>
     ): List<Mod> = withContext(Dispatchers.IO) {
         val stored = readModCategoryAssignments().toMutableMap()
-        val builtInIds = categories.filter { it.builtIn }.map { it.id }.toSet()
+        var assignmentsChanged = false
+        val classifierVersion = prefs.getInt(PREF_CATEGORY_CLASSIFIER_VERSION, 0)
+        if (classifierVersion < CATEGORY_CLASSIFIER_VERSION) {
+            // Reconsider only old unassigned results after classifier changes.
+            // Non-empty assignments are manual or previously confident matches.
+            assignmentsChanged = stored.entries.removeIf { it.value.isBlank() }
+            prefs.edit().putInt(PREF_CATEGORY_CLASSIFIER_VERSION, CATEGORY_CLASSIFIER_VERSION).apply()
+        }
+        val validCategoryIds = categories.map { it.id }.toSet()
         val updated = mods.map { mod ->
+            val hasStoredAssignment = stored.containsKey(mod.id)
             val saved = stored[mod.id]
-            val categoryId = if (stored.containsKey(mod.id)) {
-                saved?.takeIf { it.isNotBlank() && (it in builtInIds || categories.any { category -> category.id == it }) }
+            val categoryId = if (hasStoredAssignment) {
+                saved?.takeIf { it.isNotBlank() && it in validCategoryIds }
             } else {
                 autoCategoryId(mod, categories)
             }
-            if (!stored.containsKey(mod.id)) stored[mod.id] = categoryId.orEmpty()
+            if (!hasStoredAssignment) {
+                stored[mod.id] = categoryId.orEmpty()
+                assignmentsChanged = true
+            }
             mod.copy(categoryId = categoryId)
         }
-        saveModCategoryAssignments(stored)
+        if (assignmentsChanged) saveModCategoryAssignments(stored)
         updated
     }
 
@@ -498,7 +527,7 @@ class ModRepository(private val context: Context) {
                 mod.copy(categoryId = categoryId)
             }
         }
-        saveModCategoryAssignments(assignments)
+        if (assignedCount > 0) saveModCategoryAssignments(assignments)
         AutoCategoryResult(updated, assignedCount)
     }
 
@@ -513,24 +542,50 @@ class ModRepository(private val context: Context) {
     }
 
     private fun autoCategoryId(mod: Mod, categories: List<ModCategory>): String? {
-        val searchable = (listOf(mod.title, mod.folderName, mod.description) + mod.tags)
-            .joinToString(" ")
-            .lowercase()
-        val patterns = listOf(
-            "ui" to listOf("ui", "interface", "quality of life", "qol"),
-            "districts" to listOf("district"),
-            "dungeons" to listOf("dungeon"),
-            "quirks" to listOf("quirk"),
-            "trinkets" to listOf("trinket"),
-            "enemies" to listOf("enemy", "enemies"),
-            "class_patch" to listOf("class patch", "classpatch"),
-            "class" to listOf("class", "hero"),
-            "skins" to listOf("skin", "skins")
+        val body = normalizeCategoryText(
+            listOf(mod.title, mod.folderName, mod.description).joinToString(" ")
         )
-        return patterns.firstOrNull { (id, words) ->
-            id in categories.map { it.id } && words.any(searchable::contains)
-        }?.first
+        val compactBody = body.replace(" ", "")
+        val normalizedTags = mod.tags
+            .map(::normalizeCategoryText)
+            .filter(String::isNotBlank)
+            .toSet()
+
+        var bestId: String? = null
+        var bestScore = 0
+        categories.forEach { category ->
+            if (!category.builtIn) return@forEach
+            val keywords = CATEGORY_KEYWORDS[category.id] ?: return@forEach
+            val score = keywords.maxOfOrNull { keyword ->
+                val normalizedKeyword = normalizeCategoryText(keyword)
+                val tagMatch = normalizedTags.any { tag ->
+                    tag == normalizedKeyword || tag.contains(normalizedKeyword)
+                }
+                val bodyMatch = body.containsWord(normalizedKeyword) ||
+                    compactBody.contains(normalizedKeyword.replace(" ", ""))
+                when {
+                    tagMatch -> 100
+                    bodyMatch -> 50
+                    else -> 0
+                }
+            } ?: 0
+            if (score > bestScore) {
+                bestScore = score
+                bestId = category.id
+            }
+        }
+        return bestId
     }
+
+    private fun normalizeCategoryText(value: String): String =
+        value.lowercase(Locale.ROOT)
+            .replace(CATEGORY_SEPARATOR_REGEX, " ")
+            .trim()
+            .replace(WHITESPACE_REGEX, " ")
+
+    private fun String.containsWord(word: String): Boolean =
+        " $this ".contains(" $word ")
+
 
     suspend fun scanMods(targetPath: String? = null, uriStr: String? = null): List<Mod> = withContext(Dispatchers.IO) {
         val path = targetPath ?: getActivePath()

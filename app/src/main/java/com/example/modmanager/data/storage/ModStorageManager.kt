@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.darkestdungeon.modmanager.data.model.Mod
+import com.darkestdungeon.modmanager.data.model.ModMetadata
 import com.darkestdungeon.modmanager.data.parser.ModMetadataReader
 import org.json.JSONArray
 import org.json.JSONObject
@@ -16,6 +17,31 @@ class ModStorageManager(private val context: Context) {
         const val MOD_LIST_FILE_NAME = "mod_list.json"
         const val DISABLED_MODS_FOLDER = "Disabled Mods"
         private val HIDDEN_GENERATED_FOLDERS = setOf(".port-nx-original", ".port-switch")
+    }
+
+    // Metadata parsing is the most expensive part of a rescan. Keep a small
+    // in-memory cache for unchanged physical mod folders; icon discovery and
+    // folder enumeration still run so newly added/removed files are visible.
+    private data class CachedMetadata(
+        val fingerprint: String,
+        val metadata: ModMetadata
+    )
+
+    private val metadataCache = HashMap<String, CachedMetadata>()
+
+    private fun readCachedMetadata(folder: File): ModMetadata {
+        val metadataFiles = listOf("project.xml", "modinfo.json", "mod.txt")
+            .map { File(folder, it) }
+        val fingerprint = metadataFiles.joinToString("|") { file ->
+            "${file.name}:${file.exists()}:${file.lastModified()}:${file.length()}"
+        }
+        val key = folder.absolutePath
+        val cached = metadataCache[key]
+        if (cached != null && cached.fingerprint == fingerprint) return cached.metadata
+
+        val metadata = ModMetadataReader.readFromFolder(folder)
+        metadataCache[key] = CachedMetadata(fingerprint, metadata)
+        return metadata
     }
 
     /**
@@ -63,7 +89,7 @@ class ModStorageManager(private val context: Context) {
             )
 
         subFolders.forEach { folder ->
-            val metadata = ModMetadataReader.readFromFolder(folder)
+            val metadata = readCachedMetadata(folder)
             val modId = metadata.id ?: folder.name
 
             val iconPath = ModMetadataReader.findPreviewImage(folder)

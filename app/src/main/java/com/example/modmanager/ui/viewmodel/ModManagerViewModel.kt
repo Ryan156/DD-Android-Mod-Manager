@@ -33,7 +33,13 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun loadInitialState() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    statusMessage = "Scanning mod directory..."
+                )
+            }
             try {
                 val path = repository.getActivePath()
                 val uriStr = repository.getActiveUriStr()
@@ -85,6 +91,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
+                        statusMessage = "Mod directory scanned: ${categorized.size} mod(s) found.",
                         selectedMod = scanned.firstOrNull()
                     )
                 }
@@ -181,7 +188,13 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun scanMods() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    statusMessage = "Scanning mod directory..."
+                )
+            }
             try {
                 val path = _uiState.value.activeFolderPath
                 val uriStr = _uiState.value.activeFolderUriStr
@@ -191,6 +204,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
+                        statusMessage = "Mod directory scanned: ${categorized.size} mod(s) found.",
                         selectedMod = categorized.find { m -> m.id == it.selectedMod?.id } ?: categorized.firstOrNull()
                     )
                 }
@@ -281,7 +295,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
                     is TransferOutcome.Success ->
                         _uiState.update {
-                            it.copy(statusMessage = "Source save written: order updated (${newAppOrder.size} mods).")
+                            it.copy(statusMessage = "Source save written: order updated (${newAppOrder.size} mods). Backup created alongside the save.")
                         }
                 }
             }
@@ -497,7 +511,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             is TransferOutcome.Refused ->
                 _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
             is TransferOutcome.Success ->
-                _uiState.update { it.copy(statusMessage = "Source save written: order updated (${order.size} mods).") }
+                _uiState.update { it.copy(statusMessage = "Source save written: order updated (${order.size} mods). Backup created alongside the save.") }
         }
     }
 
