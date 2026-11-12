@@ -129,7 +129,7 @@ fun ModListScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Matched source order: ${report.matched.size} mod(s)")
                     Text(
-                        "Target save written successfully. A timestamped backup of the previous save was created alongside it.",
+                        "Target save written successfully. A timestamped backup was created in the 'backup save' folder.",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )

@@ -295,7 +295,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
                     is TransferOutcome.Success ->
                         _uiState.update {
-                            it.copy(statusMessage = "Source save written: order updated (${newAppOrder.size} mods). Backup created alongside the save.")
+                            it.copy(statusMessage = "Source save written: order updated (${newAppOrder.size} mods). Backup created in the 'backup save' folder.")
                         }
                 }
             }
@@ -511,7 +511,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             is TransferOutcome.Refused ->
                 _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
             is TransferOutcome.Success ->
-                _uiState.update { it.copy(statusMessage = "Source save written: order updated (${order.size} mods). Backup created alongside the save.") }
+                _uiState.update { it.copy(statusMessage = "Source save written: order updated (${order.size} mods). Backup created in the 'backup save' folder.") }
         }
     }
 

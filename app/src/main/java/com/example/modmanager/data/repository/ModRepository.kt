@@ -23,15 +23,15 @@ import java.util.Locale
 private val CATEGORY_SEPARATOR_REGEX = Regex("[^\\p{L}\\p{N}]+")
 private val WHITESPACE_REGEX = Regex("\\s+")
 private val CATEGORY_KEYWORDS = mapOf(
-    "ui" to listOf("ui", "interface", "quality of life", "qol"),
-    "districts" to listOf("district", "districts"),
+    "ui" to listOf("ui", "user interface", "interface", "quality of life", "qol", "hud"),
+    "districts" to listOf("district", "districts", "town district"),
     "dungeons" to listOf("dungeon", "dungeons"),
     "quirks" to listOf("quirk", "quirks"),
     "trinkets" to listOf("trinket", "trinkets"),
-    "enemies" to listOf("enemy", "enemies", "monster", "monsters"),
-    "class_patch" to listOf("class patch", "classpatch", "patch"),
-    "class" to listOf("new class", "hero class", "class", "hero"),
-    "skins" to listOf("skin", "skins", "cosmetic", "cosmetics")
+    "enemies" to listOf("enemy", "enemies", "monster", "monsters", "boss", "bosses"),
+    "class_patch" to listOf("class patch", "classpatch", "patch class", "patch"),
+    "class" to listOf("new class", "hero class", "class", "hero", "character"),
+    "skins" to listOf("skin", "skins", "cosmetic", "cosmetics", "outfit")
 )
 
 class ModRepository(private val context: Context) {
@@ -52,7 +52,7 @@ class ModRepository(private val context: Context) {
         const val PREF_SELECTED_CATEGORY = "selected_category"
         const val PREF_MOD_CATEGORY_ASSIGNMENTS = "mod_category_assignments"
         private const val PREF_CATEGORY_CLASSIFIER_VERSION = "category_classifier_version"
-        private const val CATEGORY_CLASSIFIER_VERSION = 2
+        private const val CATEGORY_CLASSIFIER_VERSION = 6
         private const val SEP = "\u0000"
 
         fun getDefaultModDirectory(context: Context): String {
@@ -470,9 +470,10 @@ class ModRepository(private val context: Context) {
         val stored = readModCategoryAssignments().toMutableMap()
         var assignmentsChanged = false
         val classifierVersion = prefs.getInt(PREF_CATEGORY_CLASSIFIER_VERSION, 0)
-        if (classifierVersion < CATEGORY_CLASSIFIER_VERSION) {
-            // Reconsider only old unassigned results after classifier changes.
-            // Non-empty assignments are manual or previously confident matches.
+        val migrateClassifierAssignments = classifierVersion < CATEGORY_CLASSIFIER_VERSION
+        if (migrateClassifierAssignments) {
+            // Clear old unassigned results. Strong XML title/tag matches are
+            // corrected below; ordinary non-empty assignments remain intact.
             assignmentsChanged = stored.entries.removeIf { it.value.isBlank() }
             prefs.edit().putInt(PREF_CATEGORY_CLASSIFIER_VERSION, CATEGORY_CLASSIFIER_VERSION).apply()
         }
@@ -480,12 +481,21 @@ class ModRepository(private val context: Context) {
         val updated = mods.map { mod ->
             val hasStoredAssignment = stored.containsKey(mod.id)
             val saved = stored[mod.id]
+            val savedCategoryId = saved?.takeIf { it.isNotBlank() && it in validCategoryIds }
+            val migratedCategoryId = if (migrateClassifierAssignments && savedCategoryId != null) {
+                strongAutoCategoryId(mod, categories) ?: savedCategoryId
+            } else {
+                savedCategoryId
+            }
             val categoryId = if (hasStoredAssignment) {
-                saved?.takeIf { it.isNotBlank() && it in validCategoryIds }
+                migratedCategoryId
             } else {
                 autoCategoryId(mod, categories)
             }
             if (!hasStoredAssignment) {
+                stored[mod.id] = categoryId.orEmpty()
+                assignmentsChanged = true
+            } else if (migrateClassifierAssignments && stored[mod.id] != categoryId.orEmpty()) {
                 stored[mod.id] = categoryId.orEmpty()
                 assignmentsChanged = true
             }
@@ -542,10 +552,13 @@ class ModRepository(private val context: Context) {
     }
 
     private fun autoCategoryId(mod: Mod, categories: List<ModCategory>): String? {
-        val body = normalizeCategoryText(
-            listOf(mod.title, mod.folderName, mod.description).joinToString(" ")
-        )
-        val compactBody = body.replace(" ", "")
+        // Mod.title is populated from project.xml <Title>. Treat it as a
+        // dedicated high-confidence source instead of hiding it in a combined
+        // string. Folder names are useful too, while descriptions are weak
+        // because most Darkest Dungeon mods mention generic words like dungeon.
+        val projectTitle = normalizeCategoryText(mod.title)
+        val folderName = normalizeCategoryText(mod.folderName)
+        val description = normalizeCategoryText(mod.description)
         val normalizedTags = mod.tags
             .map(::normalizeCategoryText)
             .filter(String::isNotBlank)
@@ -558,14 +571,22 @@ class ModRepository(private val context: Context) {
             val keywords = CATEGORY_KEYWORDS[category.id] ?: return@forEach
             val score = keywords.maxOfOrNull { keyword ->
                 val normalizedKeyword = normalizeCategoryText(keyword)
+                val compactKeyword = normalizedKeyword.replace(" ", "")
                 val tagMatch = normalizedTags.any { tag ->
                     tag == normalizedKeyword || tag.contains(normalizedKeyword)
                 }
-                val bodyMatch = body.containsWord(normalizedKeyword) ||
-                    compactBody.contains(normalizedKeyword.replace(" ", ""))
+                val titleMatch = projectTitle.containsWord(normalizedKeyword) ||
+                    projectTitle.replace(" ", "").contains(compactKeyword)
+                val folderMatch = folderName.containsWord(normalizedKeyword) ||
+                    folderName.replace(" ", "").contains(compactKeyword)
+                val descriptionMatch = description.containsWord(normalizedKeyword)
                 when {
-                    tagMatch -> 100
-                    bodyMatch -> 50
+                    // The XML title identifies what the mod is; it wins
+                    // over a conflicting generic tag such as Enemies.
+                    titleMatch -> 1_200
+                    tagMatch -> 1_000
+                    folderMatch -> 800
+                    descriptionMatch -> 50
                     else -> 0
                 }
             } ?: 0
@@ -575,6 +596,27 @@ class ModRepository(private val context: Context) {
             }
         }
         return bestId
+    }
+
+    private fun strongAutoCategoryId(mod: Mod, categories: List<ModCategory>): String? {
+        val detected = autoCategoryId(mod, categories) ?: return null
+        val projectTitle = normalizeCategoryText(mod.title)
+        val folderName = normalizeCategoryText(mod.folderName)
+        val normalizedTags = mod.tags.map(::normalizeCategoryText).filter(String::isNotBlank)
+        val keywords = CATEGORY_KEYWORDS[detected] ?: return null
+        val hasStrongMatch = keywords.any { keyword ->
+            val normalizedKeyword = normalizeCategoryText(keyword)
+            val compactKeyword = normalizedKeyword.replace(" ", "")
+            val titleMatch = projectTitle.containsWord(normalizedKeyword) ||
+                projectTitle.replace(" ", "").contains(compactKeyword)
+            val folderMatch = folderName.containsWord(normalizedKeyword) ||
+                folderName.replace(" ", "").contains(compactKeyword)
+            val tagMatch = normalizedTags.any { tag ->
+                tag == normalizedKeyword || tag.contains(normalizedKeyword)
+            }
+            titleMatch || folderMatch || tagMatch
+        }
+        return detected.takeIf { hasStrongMatch }
     }
 
     private fun normalizeCategoryText(value: String): String =

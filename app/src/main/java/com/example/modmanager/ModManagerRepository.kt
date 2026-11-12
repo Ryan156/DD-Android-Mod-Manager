@@ -1,9 +1,14 @@
 package com.darkestdungeon.modmanager
 
 import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.provider.DocumentsContract
+import android.provider.MediaStore
+import androidx.documentfile.provider.DocumentFile
 import com.darkestdungeon.modmanager.data.storage.ParsedSave
 import com.darkestdungeon.modmanager.data.storage.SaveFormatException
 import com.darkestdungeon.modmanager.data.storage.SaveParser
@@ -124,55 +129,78 @@ class ModManagerRepository(private val context: Context) {
             if (original.contentEquals(bytes)) return@withContext null
 
             val backupWarning: String? = runCatching<String?> {
+                val backupName = "persist.game.json.backup.${backupTimestamp()}.json"
                 if (DocumentsContract.isTreeUri(fileUri)) {
-                    // Tree URI: create a timestamped sibling backup next to
-                    // the save file. Never overwrite an earlier backup.
-                    val children = queryChildren(fileUri)
-                    val backupBase = "persist.game.json.bak.${backupTimestamp()}"
-                    var backupName = backupBase
+                    // A selected save directory grants permission to create a
+                    // visible `backup save` folder beside persist.game.json.
+                    val root = DocumentFile.fromTreeUri(context, fileUri)
+                        ?: return@runCatching "Backup failed: the save folder could not be opened"
+                    val backupDir = root.findFile("backup save")
+                        ?: root.createDirectory("backup save")
+                        ?: return@runCatching "Backup failed: the backup save folder could not be created"
+                    val backupNames = backupDir.listFiles().mapNotNull { it.name }.toSet()
+                    var uniqueName = backupName
                     var suffix = 1
-                    while (children.any { it.name == backupName }) {
-                        backupName = "$backupBase-$suffix"
+                    while (uniqueName in backupNames) {
+                        uniqueName = backupName.removeSuffix(".json") + "-$suffix.json"
                         suffix++
                     }
-                    val backupUri = DocumentsContract.createDocument(
-                        resolver,
-                        DocumentsContract.buildDocumentUriUsingTree(
-                            fileUri,
-                            DocumentsContract.getTreeDocumentId(fileUri)
-                        ),
-                        "application/octet-stream",
-                        backupName
-                    )
-                    if (backupUri == null) {
-                        "Backup skipped: the .bak file could not be created in the save folder"
-                    } else {
-                        val backupStream = resolver.openOutputStream(backupUri, "wt")
-                        if (backupStream == null) {
-                            "Backup failed: the backup file could not be opened for writing"
-                        } else {
-                            backupStream.use { it.write(original) }
-                            null
-                        }
+                    val backupFile = backupDir.createFile("application/json", uniqueName)
+                        ?: return@runCatching "Backup failed: the backup file could not be created"
+                    val backupStream = resolver.openOutputStream(backupFile.uri, "wt")
+                        ?: return@runCatching "Backup failed: the backup file could not be opened"
+                    backupStream.use { it.write(original) }
+                    null
+                } else if (fileUri.scheme == "file") {
+                    // Direct file access can create the requested folder beside
+                    // the original save without relying on SAF parent access.
+                    val saveFile = File(Uri.decode(fileUri.path ?: ""))
+                    val backupDir = File(saveFile.parentFile ?: context.filesDir, "backup save")
+                    if (!backupDir.exists() && !backupDir.mkdirs()) {
+                        return@runCatching "Backup failed: the backup save folder could not be created"
                     }
-                } else {
-                    // File URI: SAF grants no write access to the parent folder, so a
-                    // sibling .bak is impossible. Fall back to the app's private dir.
-                    val backupDir = File(context.filesDir, "save_backups")
-                    if (!backupDir.exists()) backupDir.mkdirs()
-                    val backupBase = "persist.game.json.bak.${backupTimestamp()}"
-                    var backupFile = File(backupDir, backupBase)
-                    var suffix = 1
-                    while (backupFile.exists()) {
-                        backupFile = File(backupDir, "$backupBase-$suffix")
-                        suffix++
-                    }
+                    val backupFile = uniqueBackupFile(backupDir, backupName)
                     backupFile.writeBytes(original)
+                    null
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // OpenDocument grants access to the individual file, not
+                    // its parent. Store a visible fallback in public Documents.
+                    val values = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, backupName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                        put(
+                            MediaStore.MediaColumns.RELATIVE_PATH,
+                            "${Environment.DIRECTORY_DOCUMENTS}/backup save"
+                        )
+                    }
+                    val backupUri = resolver.insert(
+                        MediaStore.Files.getContentUri("external"),
+                        values
+                    ) ?: return@runCatching "Backup failed: Documents storage rejected the backup"
+                    val backupStream = resolver.openOutputStream(backupUri, "wt")
+                    if (backupStream == null) {
+                        resolver.delete(backupUri, null, null)
+                        return@runCatching "Backup failed: the Documents backup could not be opened"
+                    }
+                    backupStream.use { it.write(original) }
+                    null
+                } else {
+                    val backupDir = File(
+                        context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+                        "backup save"
+                    )
+                    if (!backupDir.exists() && !backupDir.mkdirs()) {
+                        return@runCatching "Backup failed: the backup save folder could not be created"
+                    }
+                    uniqueBackupFile(backupDir, backupName).writeBytes(original)
                     null
                 }
             }.getOrElse { e ->
                 "Backup failed: ${e.message ?: e.javaClass.simpleName}"
             }
+
+            // Do not overwrite the save unless its fallback copy was created.
+            if (backupWarning != null) return@withContext backupWarning
 
             // 2. Write the new content.
             resolver.openOutputStream(actualUri, "wt")?.use { it.write(bytes) }
@@ -185,14 +213,21 @@ class ModManagerRepository(private val context: Context) {
                 return@withContext "Verification failed: the save file content does not match what was written"
             }
 
-            // Do not replace the save unless its fallback copy was created.
-            // This guarantees that a successful write always has a usable backup.
-            if (backupWarning != null) return@withContext backupWarning
             null
         }
 
     private fun backupTimestamp(): String =
         SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())
+
+    private fun uniqueBackupFile(directory: File, baseName: String): File {
+        var candidate = File(directory, baseName)
+        var suffix = 1
+        while (candidate.exists()) {
+            candidate = File(directory, baseName.removeSuffix(".json") + "-$suffix.json")
+            suffix++
+        }
+        return candidate
+    }
 
     /**
      * Finds the persist.game.json document URI inside a tree URI (or the file URI itself).
