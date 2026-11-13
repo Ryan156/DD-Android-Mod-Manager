@@ -23,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.Mod
+import androidx.compose.ui.res.stringResource
 import com.darkestdungeon.modmanager.ui.theme.StatusEnabledGreen
 
 @Composable
@@ -96,7 +98,7 @@ fun FolderModCard(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = if (isActive) "Active" else "Inactive",
+                    text = if (isActive) stringResource(R.string.active) else stringResource(R.string.inactive),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isActive) StatusEnabledGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )

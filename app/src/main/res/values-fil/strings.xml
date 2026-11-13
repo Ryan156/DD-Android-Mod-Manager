@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">Mga Setting at Storage</string>
+    <string name="language">Wika</string>
+    <string name="language_description">
+        Piliin ang wikang gagamitin ng DD Mod Manager.
+    </string>
+    <string name="system_default">Default ng system</string>
+    <string name="mods_folder">Folder ng Mod</string>
+    <string name="active">Aktibo</string>
+    <string name="inactive">Hindi aktibo</string>
+    <string name="save_orders">Mga Save Order</string>
+    <string name="search_mods">Maghanap ng mod</string>
+    <string name="rescan_mods">I-scan muli ang mga mod</string>
+    <string name="settings">Mga Setting</string>
+    <string name="all">Lahat</string>
+    <string name="unassigned">[Hindi nakatalaga]</string>
+    <string name="done">Tapos</string>
+    <string name="cancel">Kanselahin</string>
+    <string name="apply">Ilapat</string>
+    <string name="import_source_save">Mag-import ng source save</string>
+    <string name="import_target_save">Mag-import ng target save</string>
+    <string name="enable_all">I-enable lahat</string>
+    <string name="disable_all">I-disable lahat</string>
+    <string name="batch_actions">Mga batch action</string>
+    <string name="game_save_load_order">Mod order ng game save</string>
+    <string name="edit_categories">I-edit ang mga kategorya</string>
+    <string name="add_category">Magdagdag ng kategorya</string>
+    <string name="reset_builtin_order">I-reset ang built-in na order</string>
+    <string name="auto_categorize">Awtomatikong ikategorya</string>
+    <string name="auto_sort">Awtomatikong ayusin</string>
+    <string name="built_in">Built-in</string>
+    <string name="custom">Custom</string>
+    <string name="up">Itaas</string>
+    <string name="down">Ibaba</string>
+    <string name="set_color">Itakda ang kulay</string>
+    <string name="reset">I-reset</string>
+    <string name="rename">Palitan ang pangalan</string>
+    <string name="remove">Alisin</string>
+    <string name="browse_saf">I-browse ang SAF</string>
+    <string name="save_path">I-save ang path</string>
+    <string name="mod_path">Path ng mod</string>
+    <string name="configure_storage">I-configure ang storage directory</string>
+    <string name="clear_filters">I-clear ang filter</string>
+    <string name="copy_source_target">
+        Kopyahin ang source order sa target
+    </string>
+    <string name="source_save">Source save</string>
+    <string name="target_save">Target save</string>
+    <string name="category_name">Pangalan ng kategorya</string>
+    <string name="assign_category">Magtalaga ng kategorya</string>
+    <string name="disable">I-disable</string>
+    <string name="assign">Italaga</string>
+    <string name="enable">I-enable</string>
+    <string name="start_order">Magsimula sa order #</string>
+    <string name="move">Ilipat</string>
+    <string name="mod_directory_description">
+        Tukuyin ang folder kung saan nakaimbak ang mga mod ng Darkest Dungeon.
+    </string>
+    <string name="preset_directory_suggestions">
+        Mga mungkahing preset directory
+    </string>
+    <string name="mod_summary_statistics">Mga istatistika ng mod</string>
+    <string name="total_mods_detected">Kabuuang nakitang mod: %1$d</string>
+    <string name="active_enabled_mods">Aktibong mod: %1$d</string>
+    <string name="disabled_mods">Hindi aktibong mod: %1$d</string>
+    <string name="load_order_copied">Nakopya ang load order</string>
+    <string name="matched_source_order">
+        Naitugmang source order: %1$d mod
+    </string>
+    <string name="scanning_mod_directory">Ini-scan ang mod directory...</string>
+    <string name="save_load_orders">Mga Save Load Order</string>
+    <string name="save_orders_description">
+        Ang source save ang campaign order na gagamitin. Tatanggapin ito ng target save.
+    </string>
+    <string name="category_editor_description">
+        Pumili ng kategorya para sa mga mod list. Maaaring ayusin at kulayan muli ang built-in, pero hindi palitan ang pangalan o alisin.
+    </string>
+    <string name="category_ui">UI</string>
+    <string name="category_districts">Distrito</string>
+    <string name="category_dungeons">Dungeon</string>
+    <string name="category_quirks">Quirks</string>
+    <string name="category_trinkets">Trinkets</string>
+    <string name="category_enemies">Kaaway</string>
+    <string name="category_class_patch">Class Patch</string>
+    <string name="category_class">Class</string>
+    <string name="category_skins">Skin</string>
+    <string name="choose_category_description">
+        Pumili ng kategorya para sa napiling folder mods.
+    </string>
+    <string name="add_category_title">Magdagdag ng kategorya</string>
+    <string name="rename_category_title">
+        Palitan ang pangalan ng kategorya
+    </string>
+    <string name="add">Idagdag</string>
+<string name="no_target_save_selected">Walang napiling target persist.game.json.</string><string name="target_campaign_entries">Target campaign: %1$d naka-enable na entry.</string><string name="source_campaign_none">Source campaign: walang napili. Gagamitin ang kasalukuyang mod state ng app bilang source.</string><string name="source_campaign_entries">Source campaign: %1$d naka-enable na entry.</string><string name="no_mods_found">Walang nakitang mod</string><string name="no_matching_mods">Walang tumutugmang mod</string><string name="no_mods_in_directory">Walang Darkest Dungeon mod folder sa %1$s. I-extract ang mga mod sa mga subfolder dito.</string><string name="no_mods_match_filters">Walang mod na tumutugma sa kasalukuyang search o status filter.</string><string name="no_order_loaded">Walang naka-load na order</string><string name="hue">Hue</string><string name="saturation">Saturation: %1$d%%</string><string name="luminosity">Liwanag: %1$d%%</string><string name="red">Pula: %1$d</string><string name="green">Berde: %1$d</string><string name="blue">Asul: %1$d</string><string name="hex_color">Hex na kulay</string><string name="hex_color_hint">Gamitin ang #RRGGBB o #AARRGGBB</string><string name="mod_details">Mga detalye ng mod</string><string name="no_mod_selected">Walang napiling mod</string><string name="mod_status">Status ng mod</string><string name="currently_active_load_order">Aktibo sa load order</string><string name="disabled_inactive">Naka-disable (hindi aktibo)</string><string name="description">Paglalarawan</string><string name="language_label">Wika</string><string name="categories_tags">Mga kategorya at tag</string><string name="mod_dependencies">Mga dependency ng mod</string><string name="not_installed">Hindi naka-install</string><string name="folder_file_details">Mga detalye ng folder at file</string><string name="folder_name_format">Pangalan ng folder: %1$s</string><string name="folder_path_format">Path ng folder: %1$s</string><string name="target_game_version_format">Target na bersyon ng laro: %1$s</string><string name="back">Bumalik</string><string name="author">May-akda</string><string name="version">Bersyon</string><string name="mod_directory_scanned">Na-scan ang mod directory: %1$d mod ang nakita.</string><string name="source_save_written">Naisulat ang source save: na-update ang order (%1$d mod). Gumawa ng backup sa folder na backup save.</string><string name="target_save_written_backup">Matagumpay na naisulat ang target save. Gumawa ng timestamped backup sa folder na backup save.</string></resources>

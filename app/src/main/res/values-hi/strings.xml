@@ -1,0 +1,92 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">सेटिंग और स्टोरेज</string>
+    <string name="language">भाषा</string>
+    <string name="language_description">DD Mod Manager की भाषा चुनें।</string>
+    <string name="system_default">सिस्टम डिफ़ॉल्ट</string>
+    <string name="mods_folder">मॉड फ़ोल्डर</string>
+    <string name="active">सक्रिय</string>
+    <string name="inactive">निष्क्रिय</string>
+    <string name="save_orders">सेव क्रम</string>
+    <string name="search_mods">मॉड खोजें</string>
+    <string name="rescan_mods">मॉड फिर स्कैन करें</string>
+    <string name="settings">सेटिंग</string>
+    <string name="all">सभी</string>
+    <string name="unassigned">[असाइन नहीं]</string>
+    <string name="done">पूर्ण</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="apply">लागू करें</string>
+    <string name="import_source_save">सोर्स सेव आयात करें</string>
+    <string name="import_target_save">टारगेट सेव आयात करें</string>
+    <string name="enable_all">सभी सक्षम करें</string>
+    <string name="disable_all">सभी अक्षम करें</string>
+    <string name="batch_actions">बैच कार्रवाइयाँ</string>
+    <string name="game_save_load_order">गेम सेव मॉड क्रम</string>
+    <string name="edit_categories">श्रेणियाँ संपादित करें</string>
+    <string name="add_category">श्रेणी जोड़ें</string>
+    <string name="reset_builtin_order">बिल्ट-इन क्रम रीसेट करें</string>
+    <string name="auto_categorize">स्वचालित वर्गीकरण</string>
+    <string name="auto_sort">स्वचालित क्रम</string>
+    <string name="built_in">बिल्ट-इन</string>
+    <string name="custom">कस्टम</string>
+    <string name="up">ऊपर</string>
+    <string name="down">नीचे</string>
+    <string name="set_color">रंग सेट करें</string>
+    <string name="reset">रीसेट</string>
+    <string name="rename">नाम बदलें</string>
+    <string name="remove">हटाएँ</string>
+    <string name="browse_saf">SAF ब्राउज़ करें</string>
+    <string name="save_path">पथ सहेजें</string>
+    <string name="mod_path">मॉड पथ</string>
+    <string name="configure_storage">स्टोरेज डायरेक्टरी कॉन्फ़िगर करें</string>
+    <string name="clear_filters">फ़िल्टर साफ़ करें</string>
+    <string name="copy_source_target">सोर्स क्रम टारगेट में कॉपी करें</string>
+    <string name="source_save">सोर्स सेव</string>
+    <string name="target_save">टारगेट सेव</string>
+    <string name="category_name">श्रेणी का नाम</string>
+    <string name="assign_category">श्रेणी असाइन करें</string>
+    <string name="disable">अक्षम करें</string>
+    <string name="assign">असाइन करें</string>
+    <string name="enable">सक्षम करें</string>
+    <string name="start_order">क्रम # से शुरू करें</string>
+    <string name="move">स्थानांतरित करें</string>
+    <string name="mod_directory_description">
+        उस फ़ोल्डर का चयन करें जहाँ Darkest Dungeon मॉड रखे गए हैं।
+    </string>
+    <string name="preset_directory_suggestions">
+        प्रीसेट डायरेक्टरी सुझाव
+    </string>
+    <string name="mod_summary_statistics">मॉड आँकड़े</string>
+    <string name="total_mods_detected">कुल मिले मॉड: %1$d</string>
+    <string name="active_enabled_mods">सक्रिय मॉड: %1$d</string>
+    <string name="disabled_mods">अक्षम मॉड: %1$d</string>
+    <string name="load_order_copied">लोड क्रम कॉपी किया गया</string>
+    <string name="matched_source_order">
+        मिलान किया गया स्रोत क्रम: %1$d मॉड
+    </string>
+    <string name="scanning_mod_directory">
+        मॉड डायरेक्टरी स्कैन हो रही है...
+    </string>
+    <string name="save_load_orders">सेव लोड क्रम</string>
+    <string name="save_orders_description">
+        स्रोत सेव अभियान क्रम देता है। लक्ष्य सेव को यही क्रम मिलेगा।
+    </string>
+    <string name="category_editor_description">
+        मॉड सूची के लिए श्रेणी चुनें। बिल्ट-इन श्रेणियों का क्रम और रंग बदला जा सकता है, लेकिन उनका नाम या उन्हें हटाया नहीं जा सकता।
+    </string>
+    <string name="category_ui">यूआई</string>
+    <string name="category_districts">जिले</string>
+    <string name="category_dungeons">कालकोठरी</string>
+    <string name="category_quirks">गुण</string>
+    <string name="category_trinkets">ट्रिंकेट</string>
+    <string name="category_enemies">दुश्मन</string>
+    <string name="category_class_patch">क्लास पैच</string>
+    <string name="category_class">क्लास</string>
+    <string name="category_skins">स्किन</string>
+    <string name="choose_category_description">
+        चुने गए फ़ोल्डर मॉड के लिए श्रेणी चुनें।
+    </string>
+    <string name="add_category_title">श्रेणी जोड़ें</string>
+    <string name="rename_category_title">श्रेणी का नाम बदलें</string>
+    <string name="add">जोड़ें</string>
+<string name="no_target_save_selected">कोई लक्ष्य persist.game.json चुना नहीं गया है।</string><string name="target_campaign_entries">लक्ष्य अभियान: %1$d सक्षम प्रविष्टियाँ।</string><string name="source_campaign_none">स्रोत अभियान: कोई नहीं चुना गया। ऐप की वर्तमान मॉड स्थिति स्रोत के रूप में उपयोग होगी।</string><string name="source_campaign_entries">स्रोत अभियान: %1$d सक्षम प्रविष्टियाँ।</string><string name="no_mods_found">कोई मॉड नहीं मिला</string><string name="no_matching_mods">कोई मेल खाता मॉड नहीं</string><string name="no_mods_in_directory">%1$s में Darkest Dungeon मॉड फ़ोल्डर नहीं मिले। मॉड को यहाँ सबफ़ोल्डर में निकालें।</string><string name="no_mods_match_filters">कोई मॉड वर्तमान खोज या स्थिति फ़िल्टर से मेल नहीं खाता।</string><string name="no_order_loaded">कोई क्रम लोड नहीं हुआ</string><string name="hue">ह्यू</string><string name="saturation">संतृप्ति: %1$d%%</string><string name="luminosity">ल्यूमिनोसिटी: %1$d%%</string><string name="red">लाल: %1$d</string><string name="green">हरा: %1$d</string><string name="blue">नीला: %1$d</string><string name="hex_color">हेक्स रंग</string><string name="hex_color_hint">#RRGGBB या #AARRGGBB का उपयोग करें</string><string name="mod_details">मॉड विवरण</string><string name="no_mod_selected">कोई मॉड चयनित नहीं</string><string name="mod_status">मॉड स्थिति</string><string name="currently_active_load_order">वर्तमान में लोड क्रम में सक्रिय</string><string name="disabled_inactive">अक्षम (निष्क्रिय)</string><string name="description">विवरण</string><string name="language_label">भाषा</string><string name="categories_tags">श्रेणियाँ और टैग</string><string name="mod_dependencies">मॉड निर्भरताएँ</string><string name="not_installed">इंस्टॉल नहीं</string><string name="folder_file_details">फ़ोल्डर और फ़ाइल विवरण</string><string name="folder_name_format">फ़ोल्डर नाम: %1$s</string><string name="folder_path_format">फ़ोल्डर पथ: %1$s</string><string name="target_game_version_format">लक्ष्य गेम संस्करण: %1$s</string><string name="back">वापस</string><string name="author">लेखक</string><string name="version">संस्करण</string><string name="mod_directory_scanned">मॉड डायरेक्टरी स्कैन हुई: %1$d मॉड मिले।</string><string name="source_save_written">स्रोत सेव लिखा गया: क्रम अपडेट हुआ (%1$d मॉड)। backup save फ़ोल्डर में बैकअप बनाया गया।</string><string name="target_save_written_backup">लक्ष्य सेव सफलतापूर्वक लिखा गया। backup save फ़ोल्डर में टाइमस्टैम्प बैकअप बनाया गया।</string></resources>

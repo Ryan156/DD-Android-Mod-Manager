@@ -34,6 +34,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
@@ -63,9 +65,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.ModCategory
+import com.darkestdungeon.modmanager.ui.AppLanguage
+import com.darkestdungeon.modmanager.ui.localizedCategoryName
 import com.darkestdungeon.modmanager.ui.theme.DDAndroidModManagerTheme
 import com.darkestdungeon.modmanager.ui.viewmodel.CategoryAssignmentReport
 
@@ -108,6 +114,8 @@ fun SettingsScreen(
     onSetCategoryColor: (String, String) -> Unit = { _, _ -> },
     onResetCategoryColor: (String) -> Unit = {},
     onRemoveCategory: (String) -> Unit = {},
+    currentLanguageTag: String = "",
+    onLanguageSelected: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var pathInput by remember(activeFolderPath) { mutableStateOf(activeFolderPath) }
@@ -120,9 +128,9 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = onClearCategoryAssignmentReport,
             confirmButton = {
-                TextButton(onClick = onClearCategoryAssignmentReport) { Text("Done") }
+                TextButton(onClick = onClearCategoryAssignmentReport) { Text(stringResource(R.string.done)) }
             },
-            title = { Text("Auto categorize") },
+            title = { Text(stringResource(R.string.auto_categorize)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -174,7 +182,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings & Storage") },
+                title = { Text(stringResource(R.string.settings_storage)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -227,14 +235,14 @@ fun SettingsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Mod Directory Configuration",
+                            text = stringResource(R.string.configure_storage),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
                     Text(
-                        text = "Specify the directory where Darkest Dungeon mods are stored on your device.",
+                        text = stringResource(R.string.mod_directory_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -242,7 +250,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = pathInput,
                         onValueChange = { pathInput = it },
-                        label = { Text("Mod Path") },
+                        label = { Text(stringResource(R.string.mod_path)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = MaterialTheme.shapes.medium
@@ -263,7 +271,7 @@ fun SettingsScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Browse SAF")
+                            Text(stringResource(R.string.browse_saf))
                         }
 
                         Button(
@@ -271,14 +279,14 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Save Path")
+                            Text(stringResource(R.string.save_path))
                         }
                     }
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
                     Text(
-                        text = "Preset Directory Suggestions",
+                        text = stringResource(R.string.preset_directory_suggestions),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -307,6 +315,11 @@ fun SettingsScreen(
                 }
             }
 
+            LanguageCard(
+                currentLanguageTag = currentLanguageTag,
+                onLanguageSelected = onLanguageSelected
+            )
+
             CategoryEditorCard(
                 categories = categories,
                 selectedCategoryId = selectedCategoryId,
@@ -332,23 +345,23 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Game Save Load Order",
+                        stringResource(R.string.game_save_load_order),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         if (gameSaveUriStr == null) {
-                            "No target persist.game.json selected."
+                            stringResource(R.string.no_target_save_selected)
                         } else {
-                            "Target campaign: $gameLoadOrderCount enabled entries."
+                            stringResource(R.string.target_campaign_entries, gameLoadOrderCount)
                         },
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
                         if (sourceGameSaveUriStr == null) {
-                            "Source campaign: none selected. The app's current mod state is used as the source."
+                            stringResource(R.string.source_campaign_none)
                         } else {
-                            "Source campaign: $sourceGameLoadOrderCount enabled entries."
+                            stringResource(R.string.source_campaign_entries, sourceGameLoadOrderCount)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
@@ -366,7 +379,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Rounded.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Import source save", maxLines = 1)
+                            Text(stringResource(R.string.import_source_save), maxLines = 1)
                         }
                         OutlinedButton(
                             onClick = onLaunchSaveFilePicker,
@@ -377,7 +390,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Rounded.Description, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Import target save", maxLines = 1)
+                            Text(stringResource(R.string.import_target_save), maxLines = 1)
                         }
                     }
                 }
@@ -406,7 +419,7 @@ fun SettingsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Batch Actions",
+                            text = stringResource(R.string.batch_actions),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -427,7 +440,7 @@ fun SettingsScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Enable All")
+                            Text(stringResource(R.string.enable_all))
                         }
 
                         OutlinedButton(
@@ -444,7 +457,7 @@ fun SettingsScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Disable All")
+                            Text(stringResource(R.string.disable_all))
                         }
                     }
 
@@ -459,7 +472,7 @@ fun SettingsScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Rescan Mod Directory")
+                        Text(stringResource(R.string.rescan_mods))
                     }
                 }
             }
@@ -487,23 +500,23 @@ fun SettingsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Mod Summary Statistics",
+                            text = stringResource(R.string.mod_summary_statistics),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
                     Text(
-                        text = "Total Mods Detected: $totalModsCount",
+                        text = stringResource(R.string.total_mods_detected, totalModsCount),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "Active/Enabled Mods: $enabledModsCount",
+                        text = stringResource(R.string.active_enabled_mods, enabledModsCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Disabled Mods: $disabledModsCount",
+                        text = stringResource(R.string.disabled_mods, disabledModsCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -514,8 +527,8 @@ fun SettingsScreen(
 
     if (showAddCategoryDialog) {
         CategoryNameDialog(
-            title = "Add category",
-            confirmLabel = "Add",
+            title = stringResource(R.string.add_category_title),
+            confirmLabel = stringResource(R.string.add),
             onDismiss = { showAddCategoryDialog = false },
             onConfirm = { name ->
                 onAddCategory(name)
@@ -526,9 +539,9 @@ fun SettingsScreen(
 
     renameCategory?.let { category ->
         CategoryNameDialog(
-            title = "Rename category",
+            title = stringResource(R.string.rename_category_title),
             initialName = category.name,
-            confirmLabel = "Rename",
+            confirmLabel = stringResource(R.string.rename),
             onDismiss = { renameCategory = null },
             onConfirm = { name ->
                 onRenameCategory(category.id, name)
@@ -549,6 +562,69 @@ fun SettingsScreen(
     }
 }
 
+
+@Composable
+private fun LanguageCard(
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = AppLanguage.options.firstOrNull { it.tag == currentLanguageTag }
+        ?: AppLanguage.options.first()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.language),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = stringResource(R.string.language_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Box {
+                OutlinedButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(
+                        text = selected.label,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1
+                    )
+                    Text("⌄")
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    AppLanguage.options.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.label) },
+                            onClick = {
+                                expanded = false
+                                onLanguageSelected(option.tag)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun CategoryEditorCard(
@@ -575,54 +651,52 @@ private fun CategoryEditorCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Edit Categories", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.edit_categories), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Select a category to use in the mod lists. Built-in categories can be reordered and recolored, but cannot be renamed or removed. Custom categories support all editing actions.",
+                stringResource(R.string.category_editor_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = onAddCategory,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text("Add category")
+                    Text(stringResource(R.string.add_category), maxLines = 2)
                 }
                 OutlinedButton(
                     onClick = onResetBuiltInCategoryOrder,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text("Reset built-in order")
+                    Text(stringResource(R.string.reset_builtin_order), maxLines = 2)
                 }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
                 OutlinedButton(
                     onClick = onAutoCategorize,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp),
                     shape = MaterialTheme.shapes.medium
-                ) { Text("Auto categorize") }
+                ) {
+                    Text(stringResource(R.string.auto_categorize), maxLines = 2)
+                }
                 OutlinedButton(
                     onClick = onAutoSort,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp),
                     shape = MaterialTheme.shapes.medium
-                ) { Text("Auto sort") }
+                ) {
+                    Text(stringResource(R.string.auto_sort), maxLines = 2)
+                }
             }
 
             categories.forEachIndexed { index, category ->
@@ -653,9 +727,9 @@ private fun CategoryEditorCard(
                                     .background(categoryColor, RoundedCornerShape(6.dp))
                             )
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(category.name, fontWeight = FontWeight.Bold)
+                                Text(localizedCategoryName(category), fontWeight = FontWeight.Bold)
                                 Text(
-                                    if (category.builtIn) "Built-in" else "Custom",
+                                    if (category.builtIn) stringResource(R.string.built_in) else stringResource(R.string.custom),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -667,20 +741,38 @@ private fun CategoryEditorCard(
                             )
                         }
 
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            TextButton(
-                                onClick = { onMoveCategoryUp(category.id) },
-                                enabled = index > 0
-                            ) { Text("Up") }
-                            TextButton(
-                                onClick = { onMoveCategoryDown(category.id) },
-                                enabled = index < categories.lastIndex
-                            ) { Text("Down") }
-                            TextButton(onClick = { onSetCategoryColor(category) }) { Text("Set color") }
-                            TextButton(onClick = { onResetCategoryColor(category.id) }) { Text("Reset") }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                TextButton(
+                                    onClick = { onMoveCategoryUp(category.id) },
+                                    enabled = index > 0,
+                                    modifier = Modifier.weight(1f)
+                                ) { Text(stringResource(R.string.up), maxLines = 1) }
+                                TextButton(
+                                    onClick = { onMoveCategoryDown(category.id) },
+                                    enabled = index < categories.lastIndex,
+                                    modifier = Modifier.weight(1f)
+                                ) { Text(stringResource(R.string.down), maxLines = 1) }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                TextButton(
+                                    onClick = { onSetCategoryColor(category) },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text(stringResource(R.string.set_color), maxLines = 1) }
+                                TextButton(
+                                    onClick = { onResetCategoryColor(category.id) },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text(stringResource(R.string.reset), maxLines = 1) }
+                            }
                         }
 
                         if (!category.builtIn) {
@@ -691,14 +783,14 @@ private fun CategoryEditorCard(
                                 OutlinedButton(
                                     onClick = { onRenameCategory(category) },
                                     modifier = Modifier.weight(1f)
-                                ) { Text("Rename") }
+                                ) { Text(stringResource(R.string.rename)) }
                                 OutlinedButton(
                                     onClick = { onRemoveCategory(category.id) },
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         contentColor = MaterialTheme.colorScheme.error
                                     )
-                                ) { Text("Remove") }
+                                ) { Text(stringResource(R.string.remove)) }
                             }
                         }
                     }
@@ -724,11 +816,11 @@ private fun CategoryNameDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Category name") },
+                label = { Text(stringResource(R.string.category_name)) },
                 singleLine = true
             )
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
         confirmButton = {
             TextButton(
                 onClick = { onConfirm(name.trim()) },
@@ -788,7 +880,7 @@ private fun CategoryColorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Set color: " + category.name) },
+        title = { Text(stringResource(R.string.set_color) + ": " + localizedCategoryName(category)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -800,7 +892,7 @@ private fun CategoryColorDialog(
                         .height(48.dp)
                         .background(previewColor, RoundedCornerShape(8.dp))
                 )
-                Text("Hue", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.hue), style = MaterialTheme.typography.labelMedium)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -813,15 +905,15 @@ private fun CategoryColorDialog(
                         )
                 )
                 Slider(value = hue, onValueChange = { updateFromHsv(h = it) }, valueRange = 0f..360f)
-                Text("Saturation: " + saturation.toInt() + "%")
+                Text(stringResource(R.string.saturation, (saturation * 100).toInt()))
                 Slider(value = saturation, onValueChange = { updateFromHsv(s = it) }, valueRange = 0f..1f)
-                Text("Lum: " + luminosity.toInt() + "%")
+                Text(stringResource(R.string.luminosity, (luminosity * 100).toInt()))
                 Slider(value = luminosity, onValueChange = { updateFromHsv(v = it) }, valueRange = 0f..1f)
-                Text("Red: " + red.toInt())
+                Text(stringResource(R.string.red, red.toInt()))
                 Slider(value = red, onValueChange = { updateFromRgb(it, green, blue) }, valueRange = 0f..255f)
-                Text("Green: " + green.toInt())
+                Text(stringResource(R.string.green, green.toInt()))
                 Slider(value = green, onValueChange = { updateFromRgb(red, it, blue) }, valueRange = 0f..255f)
-                Text("Blue: " + blue.toInt())
+                Text(stringResource(R.string.blue, blue.toInt()))
                 Slider(value = blue, onValueChange = { updateFromRgb(red, green, it) }, valueRange = 0f..255f)
                 OutlinedTextField(
                     value = hexInput,
@@ -836,16 +928,16 @@ private fun CategoryColorDialog(
                             )
                         }
                     },
-                    label = { Text("Hex color") },
+                    label = { Text(stringResource(R.string.hex_color)) },
                     singleLine = true,
-                    supportingText = { Text("Use #RRGGBB or #AARRGGBB") }
+                    supportingText = { Text(stringResource(R.string.hex_color_hint)) }
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
         confirmButton = {
             TextButton(onClick = { onApply(hexInput.uppercase()) }, enabled = validHex) {
-                Text("Apply")
+                Text(stringResource(R.string.apply))
             }
         }
     )

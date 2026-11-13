@@ -99,9 +99,22 @@ data class ModListUiState(
             .filter { matchesSearch(it) && gamePosition(it) < 0 }
             .sortedBy { it.title.lowercase() }
 
+    /**
+     * Statistics always describe the complete mod collection. They must not be
+     * affected by the search field or category selector, which only control
+     * what is visible in the list tabs.
+     */
     val enabledCount: Int
-        get() = if (displayedGameLoadOrder.isNotEmpty()) activeMods.size else mods.count { it.isEnabled }
+        get() = if (displayedGameLoadOrder.isNotEmpty()) {
+            mods.count { gamePosition(it) >= 0 }
+        } else {
+            mods.count { it.isEnabled }
+        }
 
     val disabledCount: Int
-        get() = if (displayedGameLoadOrder.isNotEmpty()) inactiveMods.size else mods.count { !it.isEnabled }
+        get() = if (displayedGameLoadOrder.isNotEmpty()) {
+            mods.count { gamePosition(it) < 0 }
+        } else {
+            mods.count { !it.isEnabled }
+        }
 }

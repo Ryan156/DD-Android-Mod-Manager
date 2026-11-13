@@ -12,7 +12,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.darkestdungeon.modmanager.R
 import androidx.compose.foundation.layout.height
 
 @Composable
@@ -28,7 +30,7 @@ fun SearchBarAndFilter(
             .fillMaxWidth()
             .height(52.dp),
         placeholder = {
-            Text("Search mods...")
+            Text(stringResource(R.string.search_mods))
         },
         leadingIcon = {
             Icon(

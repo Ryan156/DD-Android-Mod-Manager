@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,6 +66,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.data.model.ModCategory
+import com.darkestdungeon.modmanager.ui.localizedCategoryName
 import com.darkestdungeon.modmanager.ui.components.FolderModCard
 import com.darkestdungeon.modmanager.ui.components.ModCard
 import com.darkestdungeon.modmanager.ui.components.SearchBarAndFilter
@@ -121,15 +123,15 @@ fun ModListScreen(
             onDismissRequest = onDismissTransferReport,
             confirmButton = {
                 TextButton(onClick = onDismissTransferReport) {
-                    Text("Done")
+                    Text(stringResource(R.string.done))
                 }
             },
-            title = { Text("Load order copied") },
+            title = { Text(stringResource(R.string.load_order_copied)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Matched source order: ${report.matched.size} mod(s)")
+                    Text(stringResource(R.string.matched_source_order, report.matched.size))
                     Text(
-                        "Target save written successfully. A timestamped backup was created in the 'backup save' folder.",
+                        stringResource(R.string.target_save_written_backup),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
@@ -158,9 +160,9 @@ fun ModListScreen(
         AlertDialog(
             onDismissRequest = { showCategoryPicker = false },
             confirmButton = {
-                TextButton(onClick = { showCategoryPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showCategoryPicker = false }) { Text(stringResource(R.string.cancel)) }
             },
-            title = { Text("Assign category") },
+            title = { Text(stringResource(R.string.assign_category)) },
             text = {
                 Column(
                     modifier = Modifier
@@ -180,7 +182,7 @@ fun ModListScreen(
                                 showCategoryPicker = false
                             },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text(category.name, textAlign = TextAlign.Start) }
+                        ) { Text(localizedCategoryName(category), textAlign = TextAlign.Start) }
                     }
                     TextButton(
                         onClick = {
@@ -204,11 +206,11 @@ fun ModListScreen(
                     ) {
                         Image(
                             painter = painterResource(R.mipmap.darkestdungeon_modmanager_foreground),
-                            contentDescription = "DD Mod Manager",
+                            contentDescription = stringResource(R.string.app_name),
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "DD Mod Manager",
+                            text = stringResource(R.string.app_name),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
@@ -218,14 +220,14 @@ fun ModListScreen(
                     IconButton(onClick = onRescanMods) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,
-                            contentDescription = "Rescan Mods",
+                            contentDescription = stringResource(R.string.rescan_mods),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = stringResource(R.string.settings)
                         )
                     }
                 },
@@ -252,10 +254,10 @@ fun ModListScreen(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 ) {
                     listOf(
-                        "Folder (${uiState.folderMods.size})",
-                        "Active (${uiState.activeMods.size})",
-                        "Inactive (${uiState.inactiveMods.size})",
-                        "Saves"
+                        "${stringResource(R.string.mods_folder)} (${uiState.folderMods.size})",
+                        "${stringResource(R.string.active)} (${uiState.activeMods.size})",
+                        "${stringResource(R.string.inactive)} (${uiState.inactiveMods.size})",
+                        stringResource(R.string.save_orders)
                     ).forEachIndexed { index, label ->
                         Tab(
                             selected = selectedTab == index,
@@ -313,7 +315,7 @@ fun ModListScreen(
                                 )
                                 if (uiState.selectedFolderModIds.isNotEmpty()) {
                                     TextButton(onClick = onClearFolderSelection) {
-                                        Text("Clear")
+                                        Text(stringResource(R.string.clear_filters))
                                     }
                                 }
                             }
@@ -326,19 +328,19 @@ fun ModListScreen(
                                         onClick = onDisableSelectedMods,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Disable")
+                                        Text(stringResource(R.string.disable))
                                     }
                                     OutlinedButton(
                                         onClick = { showCategoryPicker = true },
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Assign")
+                                        Text(stringResource(R.string.assign))
                                     }
                                     Button(
                                         onClick = onEnableSelectedMods,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Enable")
+                                        Text(stringResource(R.string.enable))
                                     }
                                 }
                             }
@@ -359,7 +361,7 @@ fun ModListScreen(
                                 )
                                 if (uiState.selectedActiveModIds.isNotEmpty()) {
                                     TextButton(onClick = onClearActiveSelection) {
-                                        Text("Clear")
+                                        Text(stringResource(R.string.clear_filters))
                                     }
                                 }
                             }
@@ -374,7 +376,7 @@ fun ModListScreen(
                                         onValueChange = { value ->
                                             activeDestinationInput = value.filter(Char::isDigit)
                                         },
-                                        label = { Text("Start at order #") },
+                                        label = { Text(stringResource(R.string.start_order)) },
                                         singleLine = true,
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.weight(1f)
@@ -388,7 +390,7 @@ fun ModListScreen(
                                         },
                                         enabled = activeDestinationInput.toIntOrNull()?.let { it > 0 } == true
                                     ) {
-                                        Text("Move")
+                                        Text(stringResource(R.string.move))
                                     }
                                 }
                             }
@@ -441,7 +443,7 @@ fun ModListScreen(
                                 )
 
                                 Text(
-                                    text = if (uiState.mods.isEmpty()) "No Mods Found" else "No Matching Mods",
+                                    text = if (uiState.mods.isEmpty()) stringResource(R.string.no_mods_found) else stringResource(R.string.no_matching_mods),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
@@ -449,9 +451,9 @@ fun ModListScreen(
 
                                 Text(
                                     text = if (uiState.mods.isEmpty()) {
-                                        "No Darkest Dungeon mod folders found in '${uiState.activeFolderPath}'. Make sure your mods are extracted into subfolders here."
+                                        stringResource(R.string.no_mods_in_directory, uiState.activeFolderPath)
                                     } else {
-                                        "No mods match the current search query or status filter."
+                                        stringResource(R.string.no_mods_match_filters)
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -464,7 +466,7 @@ fun ModListScreen(
                                         shape = MaterialTheme.shapes.medium,
                                         modifier = Modifier.padding(top = 8.dp)
                                     ) {
-                                        Text("Configure Storage Directory")
+                                        Text(stringResource(R.string.configure_storage))
                                     }
                                 } else {
                                     OutlinedButton(
@@ -474,7 +476,7 @@ fun ModListScreen(
                                         shape = MaterialTheme.shapes.medium,
                                         modifier = Modifier.padding(top = 8.dp)
                                     ) {
-                                        Text("Clear Filters")
+                                        Text(stringResource(R.string.clear_filters))
                                     }
                                 }
                             }
@@ -508,8 +510,8 @@ fun ModListScreen(
                                 val previous = filteredList.getOrNull(index - 1)
                                 val categoryName = uiState.categories
                                     .firstOrNull { it.id == mod.categoryId }
-                                    ?.name
-                                    ?: "[Unassigned]"
+                                    ?.let { localizedCategoryName(it) }
+                                    ?: stringResource(R.string.unassigned)
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     if (index == 0 || previous?.categoryId != mod.categoryId) {
                                         Text(
@@ -589,7 +591,7 @@ fun ModListScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Scanning mod directory...",
+                                text = stringResource(R.string.scanning_mod_directory),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
@@ -609,8 +611,9 @@ private fun CategoryFilterSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedName = categories.firstOrNull { it.id == selectedCategoryId }?.name
-        ?: if (selectedCategoryId == null) "All" else "[Unassigned]"
+    val selectedName = categories.firstOrNull { it.id == selectedCategoryId }
+        ?.let { localizedCategoryName(it) }
+        ?: if (selectedCategoryId == null) stringResource(R.string.all) else stringResource(R.string.unassigned)
 
     Box(modifier = modifier) {
         OutlinedButton(
@@ -637,7 +640,7 @@ private fun CategoryFilterSelector(
                     .verticalScroll(rememberScrollState())
             ) {
                 DropdownMenuItem(
-                    text = { Text("All") },
+                    text = { Text(stringResource(R.string.all)) },
                     onClick = {
                         onCategorySelected(null)
                         expanded = false
@@ -645,7 +648,7 @@ private fun CategoryFilterSelector(
                 )
                 categories.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text(category.name) },
+                        text = { Text(localizedCategoryName(category)) },
                         onClick = {
                             onCategorySelected(category.id)
                             expanded = false
@@ -653,7 +656,7 @@ private fun CategoryFilterSelector(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("[Unassigned]") },
+                    text = { Text(stringResource(R.string.unassigned)) },
                     onClick = {
                         onCategorySelected(UNASSIGNED_CATEGORY_FILTER_ID)
                         expanded = false
@@ -679,12 +682,12 @@ private fun SaveOrdersTab(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Save Load Orders",
+            text = stringResource(R.string.save_load_orders),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Source save is the campaign order you want to use. Target save is the campaign that will receive it. Import both in Settings, then copy the source order to the target.",
+            text = stringResource(R.string.save_orders_description),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -693,7 +696,7 @@ private fun SaveOrdersTab(
             enabled = sourceSelected && targetSelected && sourceOrder.isNotEmpty(),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Copy source order to target")
+            Text(stringResource(R.string.copy_source_target))
         }
         Row(
             modifier = Modifier
@@ -702,12 +705,12 @@ private fun SaveOrdersTab(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SaveOrderColumn(
-                title = "Source save (${sourceOrder.size})",
+                title = "${stringResource(R.string.source_save)} (${sourceOrder.size})",
                 order = sourceOrder,
                 modifier = Modifier.weight(1f)
             )
             SaveOrderColumn(
-                title = "Target save (${targetOrder.size})",
+                title = "${stringResource(R.string.target_save)} (${targetOrder.size})",
                 order = targetOrder,
                 modifier = Modifier.weight(1f)
             )
@@ -739,7 +742,7 @@ private fun SaveOrderColumn(
             ) {
                 if (order.isEmpty()) {
                     Text(
-                        "No order loaded",
+                        stringResource(R.string.no_order_loaded),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -1,0 +1,92 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">Tetapan &amp; Storan</string>
+    <string name="language">Bahasa</string>
+    <string name="language_description">
+        Pilih bahasa untuk DD Mod Manager.
+    </string>
+    <string name="system_default">Lalai sistem</string>
+    <string name="mods_folder">Folder Mod</string>
+    <string name="active">Aktif</string>
+    <string name="inactive">Tidak aktif</string>
+    <string name="save_orders">Turutan Simpanan</string>
+    <string name="search_mods">Cari mod</string>
+    <string name="rescan_mods">Imbas semula mod</string>
+    <string name="settings">Tetapan</string>
+    <string name="all">Semua</string>
+    <string name="unassigned">[Belum ditetapkan]</string>
+    <string name="done">Selesai</string>
+    <string name="cancel">Batal</string>
+    <string name="apply">Guna</string>
+    <string name="import_source_save">Import simpanan sumber</string>
+    <string name="import_target_save">Import simpanan sasaran</string>
+    <string name="enable_all">Aktifkan semua</string>
+    <string name="disable_all">Nyahaktifkan semua</string>
+    <string name="batch_actions">Tindakan kelompok</string>
+    <string name="game_save_load_order">Turutan mod simpanan permainan</string>
+    <string name="edit_categories">Edit kategori</string>
+    <string name="add_category">Tambah kategori</string>
+    <string name="reset_builtin_order">Set semula turutan terbina dalam</string>
+    <string name="auto_categorize">Kategorikan automatik</string>
+    <string name="auto_sort">Susun automatik</string>
+    <string name="built_in">Terbina dalam</string>
+    <string name="custom">Tersuai</string>
+    <string name="up">Naik</string>
+    <string name="down">Turun</string>
+    <string name="set_color">Tetapkan warna</string>
+    <string name="reset">Set semula</string>
+    <string name="rename">Namakan semula</string>
+    <string name="remove">Buang</string>
+    <string name="browse_saf">Semak imbas SAF</string>
+    <string name="save_path">Simpan laluan</string>
+    <string name="mod_path">Laluan mod</string>
+    <string name="configure_storage">Konfigurasi direktori storan</string>
+    <string name="clear_filters">Kosongkan penapis</string>
+    <string name="copy_source_target">Salin turutan sumber ke sasaran</string>
+    <string name="source_save">Simpanan sumber</string>
+    <string name="target_save">Simpanan sasaran</string>
+    <string name="category_name">Nama kategori</string>
+    <string name="assign_category">Tetapkan kategori</string>
+    <string name="disable">Nyahaktifkan</string>
+    <string name="assign">Tetapkan</string>
+    <string name="enable">Aktifkan</string>
+    <string name="start_order">Mula pada turutan #</string>
+    <string name="move">Alihkan</string>
+    <string name="mod_directory_description">
+        Tentukan folder tempat mod Darkest Dungeon disimpan pada peranti.
+    </string>
+    <string name="preset_directory_suggestions">
+        Cadangan direktori pratetap
+    </string>
+    <string name="mod_summary_statistics">Statistik mod</string>
+    <string name="total_mods_detected">Jumlah mod dikesan: %1$d</string>
+    <string name="active_enabled_mods">Mod aktif: %1$d</string>
+    <string name="disabled_mods">Mod tidak aktif: %1$d</string>
+    <string name="load_order_copied">Turutan disalin</string>
+    <string name="matched_source_order">
+        Turutan sumber sepadan: %1$d mod
+    </string>
+    <string name="scanning_mod_directory">Mengimbas folder mod...</string>
+    <string name="save_load_orders">Turutan muat simpanan</string>
+    <string name="save_orders_description">
+        Simpanan sumber menyediakan turutan kempen. Simpanan sasaran akan menerima turutan ini.
+    </string>
+    <string name="category_editor_description">
+        Pilih kategori untuk senarai mod. Kategori terbina dalam boleh disusun dan ditukar warna, tetapi tidak boleh dinamakan semula atau dibuang.
+    </string>
+    <string name="category_ui">Antara muka</string>
+    <string name="category_districts">Daerah</string>
+    <string name="category_dungeons">Dungeons</string>
+    <string name="category_quirks">Sifat</string>
+    <string name="category_trinkets">Perhiasan</string>
+    <string name="category_enemies">Musuh</string>
+    <string name="category_class_patch">Tampalan kelas</string>
+    <string name="category_class">Kelas</string>
+    <string name="category_skins">Kulit</string>
+    <string name="choose_category_description">
+        Pilih kategori untuk mod folder yang dipilih.
+    </string>
+    <string name="add_category_title">Tambah kategori</string>
+    <string name="rename_category_title">Namakan semula kategori</string>
+    <string name="add">Tambah</string>
+<string name="no_target_save_selected">Tiada persist.game.json sasaran dipilih.</string><string name="target_campaign_entries">Kempen sasaran: %1$d entri aktif.</string><string name="source_campaign_none">Kempen sumber: tiada dipilih. Keadaan mod semasa aplikasi digunakan sebagai sumber.</string><string name="source_campaign_entries">Kempen sumber: %1$d entri aktif.</string><string name="no_mods_found">Tiada mod ditemui</string><string name="no_matching_mods">Tiada mod sepadan</string><string name="no_mods_in_directory">Tiada folder mod Darkest Dungeon ditemui dalam %1$s. Ekstrak mod ke subfolder di sini.</string><string name="no_mods_match_filters">Tiada mod sepadan dengan carian atau penapis status semasa.</string><string name="no_order_loaded">Tiada turutan dimuatkan</string><string name="hue">Rona</string><string name="saturation">Ketepuan: %1$d%%</string><string name="luminosity">Kecerahan: %1$d%%</string><string name="red">Merah: %1$d</string><string name="green">Hijau: %1$d</string><string name="blue">Biru: %1$d</string><string name="hex_color">Warna heksadesimal</string><string name="hex_color_hint">Gunakan #RRGGBB atau #AARRGGBB</string><string name="mod_details">Butiran mod</string><string name="no_mod_selected">Tiada mod dipilih</string><string name="mod_status">Status mod</string><string name="currently_active_load_order">Aktif dalam turutan muat</string><string name="disabled_inactive">Dinyahaktifkan (tidak aktif)</string><string name="description">Penerangan</string><string name="language_label">Bahasa</string><string name="categories_tags">Kategori &amp; tag</string><string name="mod_dependencies">Kebergantungan mod</string><string name="not_installed">Tidak dipasang</string><string name="folder_file_details">Butiran folder &amp; fail</string><string name="folder_name_format">Nama folder: %1$s</string><string name="folder_path_format">Laluan folder: %1$s</string><string name="target_game_version_format">Versi permainan sasaran: %1$s</string><string name="back">Kembali</string><string name="author">Pengarang</string><string name="version">Versi</string><string name="mod_directory_scanned">Folder mod diimbas: %1$d mod ditemui.</string><string name="source_save_written">Simpanan sumber ditulis: turutan dikemas kini (%1$d mod). Sandaran dibuat dalam folder backup save.</string><string name="target_save_written_backup">Simpanan sasaran berjaya ditulis. Sandaran bertanda masa dibuat dalam folder backup save.</string></resources>

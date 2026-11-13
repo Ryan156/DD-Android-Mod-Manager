@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">Configuración y almacenamiento</string>
+    <string name="language">Idioma</string>
+    <string name="language_description">
+        Elige el idioma de DD Mod Manager.
+    </string>
+    <string name="system_default">Predeterminado del sistema</string>
+    <string name="mods_folder">Carpeta de mods</string>
+    <string name="active">Activos</string>
+    <string name="inactive">Inactivos</string>
+    <string name="save_orders">Órdenes de guardado</string>
+    <string name="search_mods">Buscar mods</string>
+    <string name="rescan_mods">Volver a escanear mods</string>
+    <string name="settings">Configuración</string>
+    <string name="all">Todos</string>
+    <string name="unassigned">[Sin asignar]</string>
+    <string name="done">Listo</string>
+    <string name="cancel">Cancelar</string>
+    <string name="apply">Aplicar</string>
+    <string name="import_source_save">Importar guardado fuente</string>
+    <string name="import_target_save">Importar guardado destino</string>
+    <string name="enable_all">Activar todos</string>
+    <string name="disable_all">Desactivar todos</string>
+    <string name="batch_actions">Acciones por lotes</string>
+    <string name="game_save_load_order">Orden de mods del guardado</string>
+    <string name="edit_categories">Editar categorías</string>
+    <string name="add_category">Añadir categoría</string>
+    <string name="reset_builtin_order">Restablecer orden integrado</string>
+    <string name="auto_categorize">Categorizar automáticamente</string>
+    <string name="auto_sort">Ordenar automáticamente</string>
+    <string name="built_in">Integrado</string>
+    <string name="custom">Personalizado</string>
+    <string name="up">Subir</string>
+    <string name="down">Bajar</string>
+    <string name="set_color">Establecer color</string>
+    <string name="reset">Restablecer</string>
+    <string name="rename">Renombrar</string>
+    <string name="remove">Eliminar</string>
+    <string name="browse_saf">Explorar SAF</string>
+    <string name="save_path">Guardar ruta</string>
+    <string name="mod_path">Ruta de mods</string>
+    <string name="configure_storage">
+        Configurar directorio de almacenamiento
+    </string>
+    <string name="clear_filters">Borrar filtros</string>
+    <string name="copy_source_target">Copiar orden fuente al destino</string>
+    <string name="source_save">Guardado fuente</string>
+    <string name="target_save">Guardado destino</string>
+    <string name="category_name">Nombre de categoría</string>
+    <string name="assign_category">Asignar categoría</string>
+    <string name="disable">Desactivar</string>
+    <string name="assign">Asignar</string>
+    <string name="enable">Activar</string>
+    <string name="start_order">Comenzar en el orden #</string>
+    <string name="move">Mover</string>
+    <string name="mod_directory_description">
+        Especifica la carpeta donde se guardan los mods de Darkest Dungeon.
+    </string>
+    <string name="preset_directory_suggestions">
+        Sugerencias de directorios predefinidos
+    </string>
+    <string name="mod_summary_statistics">Estadísticas de mods</string>
+    <string name="total_mods_detected">Total de mods detectados: %1$d</string>
+    <string name="active_enabled_mods">Mods activos: %1$d</string>
+    <string name="disabled_mods">Mods desactivados: %1$d</string>
+    <string name="load_order_copied">Orden copiado</string>
+    <string name="matched_source_order">
+        Orden fuente coincidente: %1$d mod(s)
+    </string>
+    <string name="scanning_mod_directory">
+        Analizando la carpeta de mods...
+    </string>
+    <string name="save_load_orders">Órdenes de guardado</string>
+    <string name="save_orders_description">
+        El guardado fuente proporciona el orden de la campaña. El guardado destino recibirá ese orden.
+    </string>
+    <string name="category_editor_description">
+        Elige una categoría para las listas de mods. Las categorías integradas se pueden reordenar y recolorear, pero no renombrar ni eliminar.
+    </string>
+    <string name="category_ui">Interfaz</string>
+    <string name="category_districts">Distritos</string>
+    <string name="category_dungeons">Mazmorras</string>
+    <string name="category_quirks">Rasgos</string>
+    <string name="category_trinkets">Amuletos</string>
+    <string name="category_enemies">Enemigos</string>
+    <string name="category_class_patch">Parche de clase</string>
+    <string name="category_class">Clase</string>
+    <string name="category_skins">Aspectos</string>
+    <string name="choose_category_description">
+        Elige una categoría para los mods de carpeta seleccionados.
+    </string>
+    <string name="add_category_title">Añadir categoría</string>
+    <string name="rename_category_title">Renombrar categoría</string>
+    <string name="add">Añadir</string>
+<string name="no_target_save_selected">No se ha seleccionado ningún persist.game.json de destino.</string><string name="target_campaign_entries">Campaña destino: %1$d entradas activas.</string><string name="source_campaign_none">Campaña fuente: ninguna seleccionada. Se usará el estado actual de mods de la app.</string><string name="source_campaign_entries">Campaña fuente: %1$d entradas activas.</string><string name="no_mods_found">No se encontraron mods</string><string name="no_matching_mods">No hay mods coincidentes</string><string name="no_mods_in_directory">No se encontraron carpetas de mods de Darkest Dungeon en %1$s. Extrae los mods en subcarpetas aquí.</string><string name="no_mods_match_filters">Ningún mod coincide con la búsqueda o el filtro de estado actual.</string><string name="no_order_loaded">No hay orden cargado</string><string name="hue">Tono</string><string name="saturation">Saturación: %1$d%%</string><string name="luminosity">Luminosidad: %1$d%%</string><string name="red">Rojo: %1$d</string><string name="green">Verde: %1$d</string><string name="blue">Azul: %1$d</string><string name="hex_color">Color hexadecimal</string><string name="hex_color_hint">Usa #RRGGBB o #AARRGGBB</string><string name="mod_details">Detalles del mod</string><string name="no_mod_selected">No hay ningún mod seleccionado</string><string name="mod_status">Estado del mod</string><string name="currently_active_load_order">Activo en el orden de carga</string><string name="disabled_inactive">Desactivado (inactivo)</string><string name="description">Descripción</string><string name="language_label">Idioma</string><string name="categories_tags">Categorías y etiquetas</string><string name="mod_dependencies">Dependencias del mod</string><string name="not_installed">No instalado</string><string name="folder_file_details">Detalles de carpeta y archivos</string><string name="folder_name_format">Nombre de carpeta: %1$s</string><string name="folder_path_format">Ruta de carpeta: %1$s</string><string name="target_game_version_format">Versión objetivo del juego: %1$s</string><string name="back">Atrás</string><string name="author">Autor</string><string name="version">Versión</string><string name="mod_directory_scanned">Carpeta de mods analizada: se encontraron %1$d mods.</string><string name="source_save_written">Guardado fuente escrito: orden actualizada (%1$d mods). Se creó una copia en la carpeta backup save.</string><string name="target_save_written_backup">Guardado destino escrito correctamente. Se creó una copia con fecha y hora en la carpeta backup save.</string></resources>

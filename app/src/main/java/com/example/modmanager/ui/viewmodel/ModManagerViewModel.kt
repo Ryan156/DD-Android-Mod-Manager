@@ -7,6 +7,8 @@ import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.data.model.ModCategory
 import com.darkestdungeon.modmanager.data.repository.ModRepository
 import com.darkestdungeon.modmanager.data.repository.ModRepository.TransferOutcome
+import com.darkestdungeon.modmanager.ui.AppLanguage
+import com.darkestdungeon.modmanager.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +26,9 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
     // overlapping read/modify/write operations safely.
     private val saveWriteMutex = Mutex()
 
+    private fun localizedString(resourceId: Int, vararg args: Any): String =
+        AppLanguage.localizedContext(getApplication<Application>()).getString(resourceId, *args)
+
     private val _uiState = MutableStateFlow(ModListUiState())
     val uiState: StateFlow<ModListUiState> = _uiState.asStateFlow()
 
@@ -37,7 +42,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
-                    statusMessage = "Scanning mod directory..."
+                    statusMessage = localizedString(R.string.scanning_mod_directory)
                 )
             }
             try {
@@ -91,7 +96,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
-                        statusMessage = "Mod directory scanned: ${categorized.size} mod(s) found.",
+                        statusMessage = localizedString(R.string.mod_directory_scanned, categorized.size),
                         selectedMod = scanned.firstOrNull()
                     )
                 }
@@ -192,7 +197,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
-                    statusMessage = "Scanning mod directory..."
+                    statusMessage = localizedString(R.string.scanning_mod_directory)
                 )
             }
             try {
@@ -204,7 +209,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
                         isLoading = false,
-                        statusMessage = "Mod directory scanned: ${categorized.size} mod(s) found.",
+                        statusMessage = localizedString(R.string.mod_directory_scanned, categorized.size),
                         selectedMod = categorized.find { m -> m.id == it.selectedMod?.id } ?: categorized.firstOrNull()
                     )
                 }
@@ -295,7 +300,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
                     is TransferOutcome.Success ->
                         _uiState.update {
-                            it.copy(statusMessage = "Source save written: order updated (${newAppOrder.size} mods). Backup created in the 'backup save' folder.")
+                            it.copy(statusMessage = localizedString(R.string.source_save_written, newAppOrder.size))
                         }
                 }
             }
@@ -511,7 +516,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             is TransferOutcome.Refused ->
                 _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
             is TransferOutcome.Success ->
-                _uiState.update { it.copy(statusMessage = "Source save written: order updated (${order.size} mods). Backup created in the 'backup save' folder.") }
+                _uiState.update { it.copy(statusMessage = localizedString(R.string.source_save_written, order.size)) }
         }
     }
 

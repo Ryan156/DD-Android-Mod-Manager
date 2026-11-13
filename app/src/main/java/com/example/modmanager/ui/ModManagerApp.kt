@@ -226,6 +226,10 @@ fun ModManagerApp(
                     onAutoSort = {
                         viewModel.autoSortMods()
                     },
+                    currentLanguageTag = AppLanguage.selectedTag(context),
+                    onLanguageSelected = { tag ->
+                        AppLanguage.setLanguage(context, tag)
+                    },
                     categories = uiState.categories,
                     selectedCategoryId = uiState.selectedCategoryId,
                     onSelectCategory = { categoryId ->

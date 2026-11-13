@@ -40,10 +40,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.data.model.Mod
 import com.darkestdungeon.modmanager.ui.components.ModPreviewImage
 import com.darkestdungeon.modmanager.ui.theme.DDAndroidModManagerTheme
@@ -67,7 +69,7 @@ fun ModDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Mod Details",
+                        text = stringResource(R.string.mod_details),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -75,7 +77,7 @@ fun ModDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -95,7 +97,7 @@ fun ModDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No mod selected",
+                    text = stringResource(R.string.no_mod_selected),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -163,7 +165,7 @@ fun ModDetailScreen(
                                 ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Person,
-                                    contentDescription = "Author",
+                                    contentDescription = stringResource(R.string.author),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -181,7 +183,7 @@ fun ModDetailScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Info,
-                                    contentDescription = "Version",
+                                    contentDescription = stringResource(R.string.version),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -216,12 +218,12 @@ fun ModDetailScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Mod Status",
+                                text = stringResource(R.string.mod_status),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (isActive) "Currently active in load order" else "Disabled (inactive)",
+                                text = if (isActive) stringResource(R.string.currently_active_load_order) else stringResource(R.string.disabled_inactive),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (isActive) StatusEnabledGreen else StatusDisabledRed
                             )
@@ -258,7 +260,7 @@ fun ModDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Description",
+                            text = stringResource(R.string.description),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -288,7 +290,7 @@ fun ModDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Language",
+                            text = stringResource(R.string.language_label),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -326,7 +328,7 @@ fun ModDetailScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "Categories & Tags",
+                                text = stringResource(R.string.categories_tags),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -365,7 +367,7 @@ fun ModDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Mod Dependencies",
+                            text = stringResource(R.string.mod_dependencies),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -401,9 +403,9 @@ fun ModDetailScreen(
 
                                 Text(
                                     text = when {
-                                        dependencyMod == null -> "Not Installed"
-                                        dependencyMod.isEnabled -> "Active"
-                                        else -> "Disabled"
+                                        dependencyMod == null -> stringResource(R.string.not_installed)
+                                        dependencyMod.isEnabled -> stringResource(R.string.active)
+                                        else -> stringResource(R.string.disable)
                                     },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (isSatisfied) StatusEnabledGreen else StatusDisabledRed
@@ -437,25 +439,25 @@ fun ModDetailScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Folder & File Details",
+                            text = stringResource(R.string.folder_file_details),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
                     Text(
-                        text = "Folder Name: ${mod.folderName}",
+                        text = stringResource(R.string.folder_name_format, mod.folderName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Folder Path: ${mod.folderPath}",
+                        text = stringResource(R.string.folder_path_format, mod.folderPath),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (mod.gameVersion != null) {
                         Text(
-                            text = "Target Game Version: ${mod.gameVersion}",
+                            text = stringResource(R.string.target_game_version_format, mod.gameVersion),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

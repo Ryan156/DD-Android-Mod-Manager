@@ -1,0 +1,90 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">การตั้งค่าและพื้นที่จัดเก็บ</string>
+    <string name="language">ภาษา</string>
+    <string name="language_description">
+        เลือกภาษาที่ใช้ใน DD Mod Manager
+    </string>
+    <string name="system_default">ค่าเริ่มต้นของระบบ</string>
+    <string name="mods_folder">โฟลเดอร์ม็อด</string>
+    <string name="active">ใช้งานอยู่</string>
+    <string name="inactive">ไม่ได้ใช้งาน</string>
+    <string name="save_orders">ลำดับเซฟ</string>
+    <string name="search_mods">ค้นหาม็อด</string>
+    <string name="rescan_mods">สแกนม็อดใหม่</string>
+    <string name="settings">การตั้งค่า</string>
+    <string name="all">ทั้งหมด</string>
+    <string name="unassigned">[ยังไม่จัดประเภท]</string>
+    <string name="done">เสร็จสิ้น</string>
+    <string name="cancel">ยกเลิก</string>
+    <string name="apply">ใช้</string>
+    <string name="import_source_save">นำเข้าเซฟต้นทาง</string>
+    <string name="import_target_save">นำเข้าเซฟปลายทาง</string>
+    <string name="enable_all">เปิดใช้ทั้งหมด</string>
+    <string name="disable_all">ปิดใช้ทั้งหมด</string>
+    <string name="batch_actions">การทำงานเป็นชุด</string>
+    <string name="game_save_load_order">ลำดับม็อดของเกมเซฟ</string>
+    <string name="edit_categories">แก้ไขหมวดหมู่</string>
+    <string name="add_category">เพิ่มหมวดหมู่</string>
+    <string name="reset_builtin_order">รีเซ็ตลำดับในตัว</string>
+    <string name="auto_categorize">จัดหมวดหมู่อัตโนมัติ</string>
+    <string name="auto_sort">เรียงอัตโนมัติ</string>
+    <string name="built_in">ในตัว</string>
+    <string name="custom">กำหนดเอง</string>
+    <string name="up">ขึ้น</string>
+    <string name="down">ลง</string>
+    <string name="set_color">ตั้งค่าสี</string>
+    <string name="reset">รีเซ็ต</string>
+    <string name="rename">เปลี่ยนชื่อ</string>
+    <string name="remove">ลบ</string>
+    <string name="browse_saf">เรียกดู SAF</string>
+    <string name="save_path">บันทึกเส้นทาง</string>
+    <string name="mod_path">เส้นทางม็อด</string>
+    <string name="configure_storage">ตั้งค่าโฟลเดอร์จัดเก็บ</string>
+    <string name="clear_filters">ล้างตัวกรอง</string>
+    <string name="copy_source_target">คัดลอกลำดับต้นทางไปปลายทาง</string>
+    <string name="source_save">เซฟต้นทาง</string>
+    <string name="target_save">เซฟปลายทาง</string>
+    <string name="category_name">ชื่อหมวดหมู่</string>
+    <string name="assign_category">กำหนดหมวดหมู่</string>
+    <string name="disable">ปิดใช้งาน</string>
+    <string name="assign">กำหนด</string>
+    <string name="enable">เปิดใช้งาน</string>
+    <string name="start_order">เริ่มที่ลำดับ #</string>
+    <string name="move">ย้าย</string>
+    <string name="mod_directory_description">
+        ระบุโฟลเดอร์ที่เก็บม็อด Darkest Dungeon บนอุปกรณ์
+    </string>
+    <string name="preset_directory_suggestions">
+        คำแนะนำโฟลเดอร์สำเร็จรูป
+    </string>
+    <string name="mod_summary_statistics">สถิติม็อด</string>
+    <string name="total_mods_detected">ม็อดที่ตรวจพบทั้งหมด: %1$d</string>
+    <string name="active_enabled_mods">ม็อดที่เปิดใช้งาน: %1$d</string>
+    <string name="disabled_mods">ม็อดที่ปิดใช้งาน: %1$d</string>
+    <string name="load_order_copied">คัดลอกลำดับแล้ว</string>
+    <string name="matched_source_order">ลำดับต้นทางที่ตรงกัน: %1$d ม็อด</string>
+    <string name="scanning_mod_directory">กำลังสแกนโฟลเดอร์ม็อด...</string>
+    <string name="save_load_orders">ลำดับโหลดเซฟ</string>
+    <string name="save_orders_description">
+        เซฟต้นทางคือลำดับแคมเปญที่จะใช้ และเซฟปลายทางจะรับลำดับนี้
+    </string>
+    <string name="category_editor_description">
+        เลือกหมวดหมู่สำหรับรายการม็อด หมวดหมู่ในตัวเปลี่ยนลำดับและสีได้ แต่เปลี่ยนชื่อหรือลบไม่ได้
+    </string>
+    <string name="category_ui">ส่วนติดต่อ</string>
+    <string name="category_districts">เขต</string>
+    <string name="category_dungeons">ดันเจี้ยน</string>
+    <string name="category_quirks">ลักษณะ</string>
+    <string name="category_trinkets">เครื่องประดับ</string>
+    <string name="category_enemies">ศัตรู</string>
+    <string name="category_class_patch">แพตช์คลาส</string>
+    <string name="category_class">คลาส</string>
+    <string name="category_skins">สกิน</string>
+    <string name="choose_category_description">
+        เลือกหมวดหมู่สำหรับม็อดในโฟลเดอร์ที่เลือก
+    </string>
+    <string name="add_category_title">เพิ่มหมวดหมู่</string>
+    <string name="rename_category_title">เปลี่ยนชื่อหมวดหมู่</string>
+    <string name="add">เพิ่ม</string>
+<string name="no_target_save_selected">ยังไม่ได้เลือก persist.game.json ปลายทาง</string><string name="target_campaign_entries">แคมเปญปลายทาง: เปิดใช้งาน %1$d รายการ</string><string name="source_campaign_none">แคมเปญต้นทาง: ยังไม่ได้เลือก จะใช้สถานะม็อดปัจจุบันของแอปเป็นต้นทาง</string><string name="source_campaign_entries">แคมเปญต้นทาง: เปิดใช้งาน %1$d รายการ</string><string name="no_mods_found">ไม่พบม็อด</string><string name="no_matching_mods">ไม่พบม็อดที่ตรงกัน</string><string name="no_mods_in_directory">ไม่พบโฟลเดอร์ม็อด Darkest Dungeon ใน %1$s โปรดแตกไฟล์ม็อดไว้ในโฟลเดอร์ย่อยที่นี่</string><string name="no_mods_match_filters">ไม่มีม็อดที่ตรงกับการค้นหาหรือตัวกรองสถานะปัจจุบัน</string><string name="no_order_loaded">ยังไม่มีการโหลดลำดับ</string><string name="hue">เฉดสี</string><string name="saturation">ความอิ่มตัว: %1$d%%</string><string name="luminosity">ความสว่าง: %1$d%%</string><string name="red">แดง: %1$d</string><string name="green">เขียว: %1$d</string><string name="blue">น้ำเงิน: %1$d</string><string name="hex_color">สีเลขฐานสิบหก</string><string name="hex_color_hint">ใช้ #RRGGBB หรือ #AARRGGBB</string><string name="mod_details">รายละเอียดม็อด</string><string name="no_mod_selected">ยังไม่ได้เลือกม็อด</string><string name="mod_status">สถานะม็อด</string><string name="currently_active_load_order">เปิดใช้งานอยู่ในลำดับโหลด</string><string name="disabled_inactive">ปิดใช้งาน (ไม่ทำงาน)</string><string name="description">คำอธิบาย</string><string name="language_label">ภาษา</string><string name="categories_tags">หมวดหมู่และแท็ก</string><string name="mod_dependencies">ม็อดที่ต้องพึ่งพา</string><string name="not_installed">ไม่ได้ติดตั้ง</string><string name="folder_file_details">รายละเอียดโฟลเดอร์และไฟล์</string><string name="folder_name_format">ชื่อโฟลเดอร์: %1$s</string><string name="folder_path_format">เส้นทางโฟลเดอร์: %1$s</string><string name="target_game_version_format">เวอร์ชันเกมเป้าหมาย: %1$s</string><string name="back">ย้อนกลับ</string><string name="author">ผู้สร้าง</string><string name="version">เวอร์ชัน</string><string name="mod_directory_scanned">สแกนโฟลเดอร์ม็อดแล้ว: พบ %1$d ม็อด</string><string name="source_save_written">เขียนเซฟต้นทางแล้ว: อัปเดตลำดับแล้ว (%1$d ม็อด) สร้างข้อมูลสำรองในโฟลเดอร์ backup save แล้ว</string><string name="target_save_written_backup">เขียนเซฟปลายทางสำเร็จ สร้างข้อมูลสำรองพร้อมเวลาในโฟลเดอร์ backup save แล้ว</string></resources>

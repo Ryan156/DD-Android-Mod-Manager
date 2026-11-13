@@ -1,0 +1,88 @@
+<resources>
+    <string name="app_name">DD Mod Manager</string>
+    <string name="settings_storage">Cài đặt &amp; bộ nhớ</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="language_description">
+        Chọn ngôn ngữ cho DD Mod Manager.
+    </string>
+    <string name="system_default">Mặc định hệ thống</string>
+    <string name="mods_folder">Thư mục mod</string>
+    <string name="active">Đang bật</string>
+    <string name="inactive">Đang tắt</string>
+    <string name="save_orders">Thứ tự bản lưu</string>
+    <string name="search_mods">Tìm mod</string>
+    <string name="rescan_mods">Quét lại mod</string>
+    <string name="settings">Cài đặt</string>
+    <string name="all">Tất cả</string>
+    <string name="unassigned">[Chưa gán]</string>
+    <string name="done">Xong</string>
+    <string name="cancel">Hủy</string>
+    <string name="apply">Áp dụng</string>
+    <string name="import_source_save">Nhập bản lưu nguồn</string>
+    <string name="import_target_save">Nhập bản lưu đích</string>
+    <string name="enable_all">Bật tất cả</string>
+    <string name="disable_all">Tắt tất cả</string>
+    <string name="batch_actions">Thao tác hàng loạt</string>
+    <string name="game_save_load_order">Thứ tự mod của bản lưu</string>
+    <string name="edit_categories">Chỉnh sửa danh mục</string>
+    <string name="add_category">Thêm danh mục</string>
+    <string name="reset_builtin_order">Đặt lại thứ tự tích hợp</string>
+    <string name="auto_categorize">Tự động phân loại</string>
+    <string name="auto_sort">Tự động sắp xếp</string>
+    <string name="built_in">Tích hợp</string>
+    <string name="custom">Tùy chỉnh</string>
+    <string name="up">Lên</string>
+    <string name="down">Xuống</string>
+    <string name="set_color">Đặt màu</string>
+    <string name="reset">Đặt lại</string>
+    <string name="rename">Đổi tên</string>
+    <string name="remove">Xóa</string>
+    <string name="browse_saf">Duyệt SAF</string>
+    <string name="save_path">Lưu đường dẫn</string>
+    <string name="mod_path">Đường dẫn mod</string>
+    <string name="configure_storage">Cấu hình thư mục lưu trữ</string>
+    <string name="clear_filters">Xóa bộ lọc</string>
+    <string name="copy_source_target">Sao chép thứ tự nguồn sang đích</string>
+    <string name="source_save">Bản lưu nguồn</string>
+    <string name="target_save">Bản lưu đích</string>
+    <string name="category_name">Tên danh mục</string>
+    <string name="assign_category">Gán danh mục</string>
+    <string name="disable">Tắt</string>
+    <string name="assign">Gán</string>
+    <string name="enable">Bật</string>
+    <string name="start_order">Bắt đầu ở thứ tự #</string>
+    <string name="move">Di chuyển</string>
+    <string name="mod_directory_description">
+        Chỉ định thư mục lưu các mod Darkest Dungeon trên thiết bị.
+    </string>
+    <string name="preset_directory_suggestions">Gợi ý thư mục có sẵn</string>
+    <string name="mod_summary_statistics">Thống kê mod</string>
+    <string name="total_mods_detected">Tổng số mod phát hiện: %1$d</string>
+    <string name="active_enabled_mods">Mod đang bật: %1$d</string>
+    <string name="disabled_mods">Mod đang tắt: %1$d</string>
+    <string name="load_order_copied">Đã sao chép thứ tự</string>
+    <string name="matched_source_order">Thứ tự nguồn khớp: %1$d mod</string>
+    <string name="scanning_mod_directory">Đang quét thư mục mod...</string>
+    <string name="save_load_orders">Thứ tự tải bản lưu</string>
+    <string name="save_orders_description">
+        Bản lưu nguồn cung cấp thứ tự chiến dịch. Bản lưu đích sẽ nhận thứ tự này.
+    </string>
+    <string name="category_editor_description">
+        Chọn danh mục cho danh sách mod. Danh mục tích hợp có thể đổi thứ tự và màu, nhưng không thể đổi tên hoặc xóa.
+    </string>
+    <string name="category_ui">Giao diện</string>
+    <string name="category_districts">Khu vực</string>
+    <string name="category_dungeons">Hầm ngục</string>
+    <string name="category_quirks">Đặc điểm</string>
+    <string name="category_trinkets">Trang sức</string>
+    <string name="category_enemies">Kẻ thù</string>
+    <string name="category_class_patch">Bản vá lớp</string>
+    <string name="category_class">Lớp</string>
+    <string name="category_skins">Trang phục</string>
+    <string name="choose_category_description">
+        Chọn danh mục cho các mod thư mục đã chọn.
+    </string>
+    <string name="add_category_title">Thêm danh mục</string>
+    <string name="rename_category_title">Đổi tên danh mục</string>
+    <string name="add">Thêm</string>
+<string name="no_target_save_selected">Chưa chọn persist.game.json đích.</string><string name="target_campaign_entries">Chiến dịch đích: %1$d mục đang bật.</string><string name="source_campaign_none">Chiến dịch nguồn: chưa chọn. Trạng thái mod hiện tại của ứng dụng sẽ được dùng làm nguồn.</string><string name="source_campaign_entries">Chiến dịch nguồn: %1$d mục đang bật.</string><string name="no_mods_found">Không tìm thấy mod</string><string name="no_matching_mods">Không có mod phù hợp</string><string name="no_mods_in_directory">Không tìm thấy thư mục mod Darkest Dungeon trong %1$s. Hãy giải nén mod vào các thư mục con tại đây.</string><string name="no_mods_match_filters">Không có mod nào khớp với tìm kiếm hoặc bộ lọc trạng thái hiện tại.</string><string name="no_order_loaded">Chưa tải thứ tự</string><string name="hue">Sắc độ</string><string name="saturation">Độ bão hòa: %1$d%%</string><string name="luminosity">Độ sáng: %1$d%%</string><string name="red">Đỏ: %1$d</string><string name="green">Xanh lá: %1$d</string><string name="blue">Xanh dương: %1$d</string><string name="hex_color">Màu hệ thập lục phân</string><string name="hex_color_hint">Dùng #RRGGBB hoặc #AARRGGBB</string><string name="mod_details">Chi tiết mod</string><string name="no_mod_selected">Chưa chọn mod</string><string name="mod_status">Trạng thái mod</string><string name="currently_active_load_order">Đang bật trong thứ tự tải</string><string name="disabled_inactive">Đã tắt (không hoạt động)</string><string name="description">Mô tả</string><string name="language_label">Ngôn ngữ</string><string name="categories_tags">Danh mục và thẻ</string><string name="mod_dependencies">Mod phụ thuộc</string><string name="not_installed">Chưa cài đặt</string><string name="folder_file_details">Chi tiết thư mục và tệp</string><string name="folder_name_format">Tên thư mục: %1$s</string><string name="folder_path_format">Đường dẫn thư mục: %1$s</string><string name="target_game_version_format">Phiên bản game đích: %1$s</string><string name="back">Quay lại</string><string name="author">Tác giả</string><string name="version">Phiên bản</string><string name="mod_directory_scanned">Đã quét thư mục mod: tìm thấy %1$d mod.</string><string name="source_save_written">Đã ghi bản lưu nguồn: đã cập nhật thứ tự (%1$d mod). Đã tạo bản sao lưu trong thư mục backup save.</string><string name="target_save_written_backup">Đã ghi bản lưu đích thành công. Đã tạo bản sao lưu có dấu thời gian trong thư mục backup save.</string></resources>
