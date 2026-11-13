@@ -36,8 +36,8 @@ fun FolderModCard(
     isSelected: Boolean,
     onClick: () -> Unit,
     onSelectionChanged: (Boolean) -> Unit,
-    loadOrder: Int = -1,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loadOrder: Int = -1
 ) {
 
     Card(

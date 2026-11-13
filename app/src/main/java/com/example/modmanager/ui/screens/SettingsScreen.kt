@@ -94,6 +94,7 @@ fun SettingsScreen(
     onEnableAll: () -> Unit,
     onDisableAll: () -> Unit,
     onRescanMods: () -> Unit,
+    modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     errorMessage: String? = null,
     statusMessage: String? = null,
@@ -115,8 +116,7 @@ fun SettingsScreen(
     onResetCategoryColor: (String) -> Unit = {},
     onRemoveCategory: (String) -> Unit = {},
     currentLanguageTag: String = "",
-    onLanguageSelected: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    onLanguageSelected: (String) -> Unit = {}
 ) {
     var pathInput by remember(activeFolderPath) { mutableStateOf(activeFolderPath) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }

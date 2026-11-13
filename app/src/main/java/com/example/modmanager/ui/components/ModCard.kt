@@ -49,12 +49,12 @@ fun ModCard(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showToggle: Boolean = true,
     showReorderControls: Boolean = true,
     showSelectionCheckbox: Boolean = false,
     isSelected: Boolean = false,
-    onSelectionChanged: (Boolean) -> Unit = {},
-    modifier: Modifier = Modifier
+    onSelectionChanged: (Boolean) -> Unit = {}
 ) {
     Card(
         modifier = modifier

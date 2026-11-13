@@ -35,6 +35,14 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // The app switches languages at runtime, so keep all locale resources
+    // available in the generated bundle.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {

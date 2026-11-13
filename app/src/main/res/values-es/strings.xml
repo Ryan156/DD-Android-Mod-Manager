@@ -5,7 +5,6 @@
     <string name="language_description">
         Elige el idioma de DD Mod Manager.
     </string>
-    <string name="system_default">Predeterminado del sistema</string>
     <string name="mods_folder">Carpeta de mods</string>
     <string name="active">Activos</string>
     <string name="inactive">Inactivos</string>
@@ -69,7 +68,7 @@
         Orden fuente coincidente: %1$d mod(s)
     </string>
     <string name="scanning_mod_directory">
-        Analizando la carpeta de mods...
+        Analizando la carpeta de mods…
     </string>
     <string name="save_load_orders">Órdenes de guardado</string>
     <string name="save_orders_description">

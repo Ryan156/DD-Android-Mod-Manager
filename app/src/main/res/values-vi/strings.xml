@@ -5,7 +5,6 @@
     <string name="language_description">
         Chọn ngôn ngữ cho DD Mod Manager.
     </string>
-    <string name="system_default">Mặc định hệ thống</string>
     <string name="mods_folder">Thư mục mod</string>
     <string name="active">Đang bật</string>
     <string name="inactive">Đang tắt</string>
@@ -62,7 +61,7 @@
     <string name="disabled_mods">Mod đang tắt: %1$d</string>
     <string name="load_order_copied">Đã sao chép thứ tự</string>
     <string name="matched_source_order">Thứ tự nguồn khớp: %1$d mod</string>
-    <string name="scanning_mod_directory">Đang quét thư mục mod...</string>
+    <string name="scanning_mod_directory">Đang quét thư mục mod…</string>
     <string name="save_load_orders">Thứ tự tải bản lưu</string>
     <string name="save_orders_description">
         Bản lưu nguồn cung cấp thứ tự chiến dịch. Bản lưu đích sẽ nhận thứ tự này.

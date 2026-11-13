@@ -3,7 +3,6 @@
     <string name="settings_storage">सेटिंग और स्टोरेज</string>
     <string name="language">भाषा</string>
     <string name="language_description">DD Mod Manager की भाषा चुनें।</string>
-    <string name="system_default">सिस्टम डिफ़ॉल्ट</string>
     <string name="mods_folder">मॉड फ़ोल्डर</string>
     <string name="active">सक्रिय</string>
     <string name="inactive">निष्क्रिय</string>
@@ -65,7 +64,7 @@
         मिलान किया गया स्रोत क्रम: %1$d मॉड
     </string>
     <string name="scanning_mod_directory">
-        मॉड डायरेक्टरी स्कैन हो रही है...
+        मॉड डायरेक्टरी स्कैन हो रही है…
     </string>
     <string name="save_load_orders">सेव लोड क्रम</string>
     <string name="save_orders_description">

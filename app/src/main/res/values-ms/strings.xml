@@ -5,7 +5,6 @@
     <string name="language_description">
         Pilih bahasa untuk DD Mod Manager.
     </string>
-    <string name="system_default">Lalai sistem</string>
     <string name="mods_folder">Folder Mod</string>
     <string name="active">Aktif</string>
     <string name="inactive">Tidak aktif</string>
@@ -66,7 +65,7 @@
     <string name="matched_source_order">
         Turutan sumber sepadan: %1$d mod
     </string>
-    <string name="scanning_mod_directory">Mengimbas folder mod...</string>
+    <string name="scanning_mod_directory">Mengimbas folder mod…</string>
     <string name="save_load_orders">Turutan muat simpanan</string>
     <string name="save_orders_description">
         Simpanan sumber menyediakan turutan kempen. Simpanan sasaran akan menerima turutan ini.

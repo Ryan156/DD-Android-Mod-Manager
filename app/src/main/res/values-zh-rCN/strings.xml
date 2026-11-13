@@ -3,7 +3,6 @@
     <string name="settings_storage">设置与存储</string>
     <string name="language">语言</string>
     <string name="language_description">选择 DD Mod Manager 使用的语言。</string>
-    <string name="system_default">系统默认</string>
     <string name="mods_folder">模组文件夹</string>
     <string name="active">已启用</string>
     <string name="inactive">未启用</string>

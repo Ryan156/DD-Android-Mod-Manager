@@ -173,7 +173,7 @@ fun ModListScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        "Choose a category for the selected folder mods.",
+                        stringResource(R.string.choose_category_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -5,7 +5,6 @@
     <string name="language_description">
         Piliin ang wikang gagamitin ng DD Mod Manager.
     </string>
-    <string name="system_default">Default ng system</string>
     <string name="mods_folder">Folder ng Mod</string>
     <string name="active">Aktibo</string>
     <string name="inactive">Hindi aktibo</string>
@@ -68,7 +67,7 @@
     <string name="matched_source_order">
         Naitugmang source order: %1$d mod
     </string>
-    <string name="scanning_mod_directory">Ini-scan ang mod directory...</string>
+    <string name="scanning_mod_directory">Ini-scan ang mod directory…</string>
     <string name="save_load_orders">Mga Save Load Order</string>
     <string name="save_orders_description">
         Ang source save ang campaign order na gagamitin. Tatanggapin ito ng target save.
