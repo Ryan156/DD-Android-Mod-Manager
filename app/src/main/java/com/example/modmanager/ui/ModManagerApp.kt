@@ -1,6 +1,7 @@
 package com.darkestdungeon.modmanager.ui
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +41,7 @@ fun ModManagerApp(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val isDebugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
     val updateChecker = remember { AppUpdateChecker() }
     val updateScope = rememberCoroutineScope()
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
@@ -47,15 +49,18 @@ fun ModManagerApp(
     var isDownloadingUpdate by remember { mutableStateOf(false) }
     var updateDownloadFailed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val currentVersion = context.packageManager
-            .getPackageInfo(context.packageName, 0)
-            .versionName
-            .orEmpty()
-        availableUpdate = updateChecker.check(currentVersion)
+    LaunchedEffect(isDebugBuild) {
+        if (!isDebugBuild) {
+            val currentVersion = context.packageManager
+                .getPackageInfo(context.packageName, 0)
+                .versionName
+                .orEmpty()
+            availableUpdate = updateChecker.check(currentVersion)
+        }
     }
 
-    availableUpdate?.takeUnless { updateDismissed }?.let { update ->
+    if (!isDebugBuild) {
+        availableUpdate?.takeUnless { updateDismissed }?.let { update ->
         AlertDialog(
             onDismissRequest = {
                 if (!isDownloadingUpdate) updateDismissed = true
@@ -129,6 +134,7 @@ fun ModManagerApp(
                 }
             }
         )
+        }
     }
 
     // Navigation Stack
