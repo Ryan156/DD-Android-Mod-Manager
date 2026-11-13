@@ -125,6 +125,9 @@ fun ModManagerApp(
                     onMoveModDown = { modId ->
                         viewModel.moveModDown(modId)
                     },
+                    onMoveSelectedFolderModsToPosition = { position ->
+                        viewModel.moveSelectedFolderModsToPosition(position)
+                    },
                     onSearchQueryChange = { query ->
                         viewModel.setSearchQuery(query)
                     },

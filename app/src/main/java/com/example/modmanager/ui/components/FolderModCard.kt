@@ -36,6 +36,7 @@ fun FolderModCard(
     isSelected: Boolean,
     onClick: () -> Unit,
     onSelectionChanged: (Boolean) -> Unit,
+    loadOrder: Int = -1,
     modifier: Modifier = Modifier
 ) {
 
@@ -51,26 +52,50 @@ fun FolderModCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (loadOrder >= 0) {
+                androidx.compose.material3.Surface(
+                    color = if (isActive) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.padding(end = 6.dp)
+                ) {
+                    Text(
+                        text = "#${loadOrder + 1}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
             ModPreviewImage(
                 mod = mod,
-                size = 68.dp,
+                size = 56.dp,
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
 
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(8.dp))
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 Text(
                     mod.title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp),
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp),
                     fontWeight = FontWeight.Bold,
                     maxLines = 3,
                     overflow = TextOverflow.Clip
@@ -95,7 +120,7 @@ fun FolderModCard(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 Text(
                     text = if (isActive) stringResource(R.string.active) else stringResource(R.string.inactive),

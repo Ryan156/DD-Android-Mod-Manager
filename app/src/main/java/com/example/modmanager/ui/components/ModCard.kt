@@ -73,7 +73,7 @@ fun ModCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Load order reorder controls column
@@ -81,12 +81,12 @@ fun ModCard(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 6.dp)
             ) {
                 IconButton(
                     onClick = onMoveUp,
                     enabled = !isFirst,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.KeyboardArrowUp,
@@ -118,7 +118,7 @@ fun ModCard(
                 IconButton(
                     onClick = onMoveDown,
                     enabled = !isLast,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
@@ -129,9 +129,27 @@ fun ModCard(
                 }
             }
 
+            if (!showReorderControls && showSelectionCheckbox) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "#${mod.loadOrder + 1}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+
             ModPreviewImage(
                 mod = mod,
-                size = 64.dp,
+                size = 56.dp,
                 modifier = Modifier.border(
                     width = 1.dp,
                     color = if (mod.isEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -140,14 +158,14 @@ fun ModCard(
                 )
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             // Main mod details info column
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                    .padding(end = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -196,7 +214,7 @@ fun ModCard(
                         text = mod.description,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -220,22 +238,8 @@ fun ModCard(
             if (showSelectionCheckbox) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                            .padding(horizontal = 5.dp, vertical = 2.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "#${mod.loadOrder + 1}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
                     Checkbox(
                         checked = isSelected,
                         onCheckedChange = onSelectionChanged

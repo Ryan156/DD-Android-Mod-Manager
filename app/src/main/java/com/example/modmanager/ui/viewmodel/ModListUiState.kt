@@ -23,6 +23,8 @@ data class ModListUiState(
     val sourceGameLoadOrder: List<String> = emptyList(),
     /** The APP's OWN load order (source of truth): active mods in current order. */
     val appLoadOrder: List<String> = emptyList(),
+    /** Staged folder-tab order; changing it does not write the source save. */
+    val folderOrder: List<String> = emptyList(),
     /** Folder-tab batch selection; this is separate from active/inactive state. */
     val selectedFolderModIds: Set<String> = emptySet(),
     /** Active-tab selection for grouped load-order moves. */
@@ -79,10 +81,12 @@ data class ModListUiState(
     val folderMods: List<Mod>
         get() {
             val categoryOrder = categories.mapIndexed { index, category -> category.id to index }.toMap()
+            val stagedPosition = folderOrder.withIndex().associate { it.value to it.index }
             return mods
                 .filter(::matchesSearch)
                 .sortedWith(
-                    compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                    compareBy<Mod> { stagedPosition[it.id] ?: Int.MAX_VALUE }
+                        .thenBy { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
                         .thenBy { it.title.lowercase() }
                 )
         }
@@ -95,9 +99,15 @@ data class ModListUiState(
 
     /** Inactive = not present in the current source-of-truth order. */
     val inactiveMods: List<Mod>
-        get() = mods
-            .filter { matchesSearch(it) && gamePosition(it) < 0 }
-            .sortedBy { it.title.lowercase() }
+        get() {
+            val categoryOrder = categories.mapIndexed { index, category -> category.id to index }.toMap()
+            return mods
+                .filter { matchesSearch(it) && gamePosition(it) < 0 }
+                .sortedWith(
+                    compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                        .thenBy { it.title.lowercase() }
+                )
+        }
 
     /**
      * Statistics always describe the complete mod collection. They must not be

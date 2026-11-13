@@ -48,6 +48,7 @@ class ModRepository(private val context: Context) {
         const val PREF_SOURCE_SAVE_FILE_URI = "source_game_save_file_uri"
         const val DEFAULT_SAVE_FILE = "/storage/emulated/0/Android/Data/com.darkestdungeon/files/persist.game.json"
         const val PREF_APP_LOAD_ORDER = "app_load_order"
+        const val PREF_FOLDER_ORDER = "folder_reserve_order"
         const val PREF_CATEGORIES = "mod_categories"
         const val PREF_SELECTED_CATEGORY = "selected_category"
         const val PREF_MOD_CATEGORY_ASSIGNMENTS = "mod_category_assignments"
@@ -116,6 +117,18 @@ class ModRepository(private val context: Context) {
 
     suspend fun saveAppLoadOrder(order: List<String>) = withContext(Dispatchers.IO) {
         prefs.edit().putString(PREF_APP_LOAD_ORDER, order.joinToString(SEP)).apply()
+    }
+
+    /** Order staged in the Mods Folder tab; it never writes the game save by itself. */
+    suspend fun getFolderOrder(): List<String> = withContext(Dispatchers.IO) {
+        prefs.getString(PREF_FOLDER_ORDER, null)
+            ?.split(SEP)
+            ?.filter { it.isNotEmpty() }
+            ?: emptyList()
+    }
+
+    suspend fun saveFolderOrder(order: List<String>) = withContext(Dispatchers.IO) {
+        prefs.edit().putString(PREF_FOLDER_ORDER, order.joinToString(SEP)).apply()
     }
 
     suspend fun getCategories(): List<ModCategory> = withContext(Dispatchers.IO) {

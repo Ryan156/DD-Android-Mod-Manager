@@ -92,6 +92,7 @@ fun ModListScreen(
     onDismissTransferReport: () -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
+    onMoveSelectedFolderModsToPosition: (Int) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onCategoryFilterChange: (String?) -> Unit,
     onRescanMods: () -> Unit,
@@ -101,6 +102,7 @@ fun ModListScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var folderDestinationInput by rememberSaveable { mutableStateOf("") }
     var activeDestinationInput by rememberSaveable { mutableStateOf("") }
     var showCategoryPicker by remember { mutableStateOf(false) }
 
@@ -278,7 +280,7 @@ fun ModListScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (selectedTab < 3) {
@@ -301,7 +303,12 @@ fun ModListScreen(
                         }
                     }
                     if (selectedTab == 0) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = stringResource(R.string.folder_order_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -320,6 +327,33 @@ fun ModListScreen(
                                 }
                             }
                             if (uiState.selectedFolderModIds.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = folderDestinationInput,
+                                        onValueChange = { value ->
+                                            folderDestinationInput = value.filter(Char::isDigit)
+                                        },
+                                        label = { Text(stringResource(R.string.start_order)) },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Button(
+                                        onClick = {
+                                            folderDestinationInput.toIntOrNull()?.let { position ->
+                                                onMoveSelectedFolderModsToPosition(position)
+                                                folderDestinationInput = ""
+                                            }
+                                        },
+                                        enabled = folderDestinationInput.toIntOrNull()?.let { it > 0 } == true
+                                    ) {
+                                        Text(stringResource(R.string.move))
+                                    }
+                                }
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -347,7 +381,7 @@ fun ModListScreen(
                         }
                     }
                     if (selectedTab == 1) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -486,7 +520,7 @@ fun ModListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp, top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         itemsIndexed(
                             items = filteredList,
@@ -512,20 +546,22 @@ fun ModListScreen(
                                     .firstOrNull { it.id == mod.categoryId }
                                     ?.let { localizedCategoryName(it) }
                                     ?: stringResource(R.string.unassigned)
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     if (index == 0 || previous?.categoryId != mod.categoryId) {
                                         Text(
                                             text = categoryName,
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(top = 4.dp)
+                                            modifier = Modifier.padding(top = 2.dp)
                                         )
                                     }
+                                    val folderIndex = uiState.folderOrder.indexOf(mod.id)
                                     FolderModCard(
                                         mod = mod,
                                         isActive = modIsActiveInOrder,
                                         isSelected = mod.id in uiState.selectedFolderModIds,
+                                        loadOrder = folderIndex,
                                         onClick = { onNavigateToModDetail(mod) },
                                         onSelectionChanged = { selected ->
                                             onFolderModSelectionChanged(mod.id, selected)
@@ -533,6 +569,21 @@ fun ModListScreen(
                                     )
                                 }
                             } else {
+                                val previous = filteredList.getOrNull(index - 1)
+                                val categoryName = uiState.categories
+                                    .firstOrNull { it.id == mod.categoryId }
+                                    ?.let { localizedCategoryName(it) }
+                                    ?: stringResource(R.string.unassigned)
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    if (index == 0 || previous?.categoryId != mod.categoryId) {
+                                        Text(
+                                            text = categoryName,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        )
+                                    }
                                 // Button state follows the mod's position in
                                 // the APP ORDER (the source of truth), not the
                                 // filtered tab index — otherwise buttons gray
@@ -561,6 +612,7 @@ fun ModListScreen(
                                     },
                                     onClick = { onNavigateToModDetail(mod) }
                                 )
+                                }
                             }
                         }
                     }
@@ -821,6 +873,7 @@ fun ModListScreenPreview() {
             onDismissTransferReport = {},
             onMoveModUp = {},
             onMoveModDown = {},
+            onMoveSelectedFolderModsToPosition = {},
             onSearchQueryChange = {},
             onCategoryFilterChange = {},
             onRescanMods = {},

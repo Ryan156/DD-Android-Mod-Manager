@@ -29,6 +29,23 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
     private fun localizedString(resourceId: Int, vararg args: Any): String =
         AppLanguage.localizedContext(getApplication<Application>()).getString(resourceId, *args)
 
+    private fun reconcileFolderOrder(
+        existing: List<String>,
+        mods: List<Mod>,
+        categories: List<ModCategory>
+    ): List<String> {
+        val ids = mods.map { it.id }.toSet()
+        val categoryOrder = categories.mapIndexed { index, category -> category.id to index }.toMap()
+        val newIds = mods
+            .filterNot { it.id in existing }
+            .sortedWith(
+                compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                    .thenBy { it.title.lowercase() }
+            )
+            .map { it.id }
+        return existing.filter { it in ids } + newIds
+    }
+
     private val _uiState = MutableStateFlow(ModListUiState())
     val uiState: StateFlow<ModListUiState> = _uiState.asStateFlow()
 
@@ -54,6 +71,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 // The APP's OWN load order is the source of truth (persisted);
                 // it is only replaced by a new source-save import.
                 val appOrder = repository.getAppLoadOrder()
+                val savedFolderOrder = repository.getFolderOrder()
                 val categories = repository.getCategories()
                 val selectedCategoryId = repository.getSelectedCategoryId()
                 val automaticResult = if (saveUri == null && saveFileUri == null) {
@@ -92,9 +110,16 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 // Scan mods
                 val scanned = repository.scanMods(path, uriStr)
                 val categorized = repository.applyStoredModCategories(scanned, _uiState.value.categories)
+                val folderOrder = reconcileFolderOrder(
+                    savedFolderOrder,
+                    categorized,
+                    _uiState.value.categories
+                )
+                repository.saveFolderOrder(folderOrder)
                 _uiState.update {
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
+                        folderOrder = folderOrder,
                         isLoading = false,
                         statusMessage = localizedString(R.string.mod_directory_scanned, categorized.size),
                         selectedMod = scanned.firstOrNull()
@@ -205,9 +230,16 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 val uriStr = _uiState.value.activeFolderUriStr
                 val scanned = repository.scanMods(path, uriStr)
                 val categorized = repository.applyStoredModCategories(scanned, _uiState.value.categories)
+                val folderOrder = reconcileFolderOrder(
+                    _uiState.value.folderOrder,
+                    categorized,
+                    _uiState.value.categories
+                )
+                repository.saveFolderOrder(folderOrder)
                 _uiState.update {
                     it.copy(
                         mods = orderModsForGame(categorized, it.displayedGameLoadOrder),
+                        folderOrder = folderOrder,
                         isLoading = false,
                         statusMessage = localizedString(R.string.mod_directory_scanned, categorized.size),
                         selectedMod = categorized.find { m -> m.id == it.selectedMod?.id } ?: categorized.firstOrNull()
@@ -319,6 +351,44 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { it.copy(selectedFolderModIds = emptySet()) }
     }
 
+    /**
+     * Moves selected folder-tab mods as one block in the staged reserve order.
+     * This changes only the folder-tab order; the source save is untouched
+     * until the user enables/disables mods or changes the Active tab order.
+     */
+    fun moveSelectedFolderModsToPosition(destinationPosition: Int) {
+        val state = _uiState.value
+        val selectedIds = state.selectedFolderModIds
+        if (selectedIds.isEmpty() || destinationPosition < 1) return
+
+        val currentOrder = state.folderOrder
+            .ifEmpty { state.mods.map { it.id } }
+        val selectedEntries = currentOrder.filter { it in selectedIds }
+        if (selectedEntries.isEmpty()) return
+
+        val remaining = currentOrder.filterNot { it in selectedIds }
+        val insertionIndex = (destinationPosition - 1).coerceIn(0, remaining.size)
+        val nextOrder = buildList {
+            addAll(remaining.take(insertionIndex))
+            addAll(selectedEntries)
+            addAll(remaining.drop(insertionIndex))
+        }
+        if (nextOrder == currentOrder) {
+            clearFolderModSelection()
+            return
+        }
+
+        viewModelScope.launch {
+            repository.saveFolderOrder(nextOrder)
+            _uiState.update {
+                it.copy(
+                    folderOrder = nextOrder,
+                    selectedFolderModIds = emptySet()
+                )
+            }
+        }
+    }
+
     fun assignSelectedModsToCategory(categoryId: String?) {
         viewModelScope.launch {
             val state = _uiState.value
@@ -363,10 +433,15 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
                 .thenBy { it.title.lowercase() }
         )
+        val nextFolderOrder = sorted.map { it.id }
+        viewModelScope.launch {
+            repository.saveFolderOrder(nextFolderOrder)
+        }
         _uiState.update {
             it.copy(
                 mods = sorted,
-                statusMessage = "Mods sorted by the current category order."
+                folderOrder = nextFolderOrder,
+                statusMessage = localizedString(R.string.mods_sorted_by_category)
             )
         }
     }
@@ -390,7 +465,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
     fun enableSelectedMods() {
         viewModelScope.launch {
             val state = _uiState.value
-            val selected = state.mods.filter { it.id in state.selectedFolderModIds }
+            val selected = state.folderMods.filter { it.id in state.selectedFolderModIds }
             if (selected.isEmpty()) return@launch
 
             val order = state.appLoadOrder
@@ -422,7 +497,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
     fun disableSelectedMods() {
         viewModelScope.launch {
             val state = _uiState.value
-            val selected = state.mods.filter { it.id in state.selectedFolderModIds }
+            val selected = state.folderMods.filter { it.id in state.selectedFolderModIds }
             if (selected.isEmpty()) return@launch
 
             fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
