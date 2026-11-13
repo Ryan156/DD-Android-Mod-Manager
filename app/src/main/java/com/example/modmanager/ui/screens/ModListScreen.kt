@@ -546,13 +546,13 @@ fun ModListScreen(
                             val appOrderForToggle = uiState.appLoadOrder
                                 .ifEmpty { uiState.displayedGameLoadOrder }
                             val toggleCandidates = listOf(mod.title, mod.folderName, mod.id)
-                                .map { it.trim().lowercase() }
-                            val modIsActiveInOrder = appOrderForToggle.indexOfFirst { saved ->
-                                val normalized = saved.trim().lowercase().filter { it.isLetterOrDigit() }
-                                toggleCandidates.any {
-                                    it.replace(" ", "") == normalized
+                                .map { value ->
+                                    value.trim().lowercase().filter { it.isLetterOrDigit() }
                                 }
-                            } >= 0
+                            val modIsActiveInOrder = appOrderForToggle.any { saved ->
+                                val normalized = saved.trim().lowercase().filter { it.isLetterOrDigit() }
+                                normalized in toggleCandidates
+                            }
 
                             if (selectedTab == 0) {
                                 val previous = filteredList.getOrNull(index - 1)
