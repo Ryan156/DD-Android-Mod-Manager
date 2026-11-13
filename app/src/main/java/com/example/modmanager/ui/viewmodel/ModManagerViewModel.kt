@@ -852,8 +852,16 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         val builtInById = state.categories.filter { it.builtIn }.associateBy { it.id }
         val custom = state.categories.filterNot { it.builtIn }
         val categories = ModCategory.BUILT_IN.mapNotNull { builtInById[it.id] } + custom
-        _uiState.update { it.copy(categories = categories) }
-        viewModelScope.launch { repository.saveCategories(categories) }
+        val folderOrder = reorderFolderOrderForCategories(
+            state.mods,
+            categories,
+            state.folderOrder
+        )
+        _uiState.update { it.copy(categories = categories, folderOrder = folderOrder) }
+        viewModelScope.launch {
+            repository.saveCategories(categories)
+            repository.saveFolderOrder(folderOrder)
+        }
     }
 
     private fun moveCustomCategory(categoryId: String, direction: Int) {
@@ -865,8 +873,32 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         val categories = state.categories.toMutableList().apply {
             add(target, removeAt(index))
         }
-        _uiState.update { it.copy(categories = categories) }
-        viewModelScope.launch { repository.saveCategories(categories) }
+        val folderOrder = reorderFolderOrderForCategories(
+            state.mods,
+            categories,
+            state.folderOrder
+        )
+        _uiState.update { it.copy(categories = categories, folderOrder = folderOrder) }
+        viewModelScope.launch {
+            repository.saveCategories(categories)
+            repository.saveFolderOrder(folderOrder)
+        }
+    }
+
+    private fun reorderFolderOrderForCategories(
+        mods: List<Mod>,
+        categories: List<ModCategory>,
+        existingOrder: List<String>
+    ): List<String> {
+        val existingPosition = existingOrder.withIndex().associate { it.value to it.index }
+        val categoryPosition = categories.mapIndexed { index, category -> category.id to index }.toMap()
+        return mods
+            .sortedWith(
+                compareBy<Mod> { categoryPosition[it.categoryId] ?: Int.MAX_VALUE }
+                    .thenBy { existingPosition[it.id] ?: Int.MAX_VALUE }
+                    .thenBy { it.title.lowercase() }
+            )
+            .map { it.id }
     }
 
     fun removeCustomCategory(categoryId: String) {
@@ -877,9 +909,15 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         val selectedId = if (state.selectedCategoryId == categoryId) {
             categories.firstOrNull()?.id ?: ModCategory.BUILT_IN.first().id
         } else state.selectedCategoryId
+        val folderOrder = reorderFolderOrderForCategories(
+            state.mods,
+            categories,
+            state.folderOrder
+        )
         _uiState.update {
             it.copy(
                 categories = categories,
+                folderOrder = folderOrder,
                 selectedCategoryId = selectedId,
                 selectedCategoryFilterId = if (state.selectedCategoryFilterId == categoryId) null
                 else state.selectedCategoryFilterId
@@ -887,6 +925,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         }
         viewModelScope.launch {
             repository.saveCategories(categories)
+            repository.saveFolderOrder(folderOrder)
             repository.saveSelectedCategoryId(selectedId)
         }
     }
