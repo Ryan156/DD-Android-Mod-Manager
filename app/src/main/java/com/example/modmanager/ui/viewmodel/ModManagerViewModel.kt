@@ -397,10 +397,17 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             val updatedMods = state.mods.map { mod ->
                 if (mod.id in selectedIds) mod.copy(categoryId = categoryId) else mod
             }
+            val folderOrder = reorderFolderOrderForCategories(
+                updatedMods,
+                state.categories,
+                state.folderOrder
+            )
             repository.saveModCategoryAssignments(selectedIds.associateWith { categoryId })
+            repository.saveFolderOrder(folderOrder)
             _uiState.update {
                 it.copy(
                     mods = updatedMods,
+                    folderOrder = folderOrder,
                     selectedFolderModIds = emptySet()
                 )
             }
@@ -411,9 +418,16 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val state = _uiState.value
             val result = repository.autoCategorizeUnassignedMods(state.mods, state.categories)
+            val folderOrder = reorderFolderOrderForCategories(
+                result.mods,
+                state.categories,
+                state.folderOrder
+            )
+            repository.saveFolderOrder(folderOrder)
             _uiState.update {
                 it.copy(
                     mods = result.mods,
+                    folderOrder = folderOrder,
                     categoryAssignmentReport = CategoryAssignmentReport(
                         assignedCount = result.assignedCount,
                         unassignedModNames = result.mods
