@@ -79,7 +79,7 @@ data class ModListUiState(
     }
 
     private fun normalized(value: String): String =
-        value.trim().lowercase().replace(" ", "")
+        value.trim().lowercase().filter { it.isLetterOrDigit() }
 
     private fun matchesSaved(saved: String, mod: Mod): Boolean =
         listOf(mod.title, mod.folderName, mod.id)

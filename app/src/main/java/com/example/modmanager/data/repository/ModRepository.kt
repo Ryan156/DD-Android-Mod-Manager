@@ -371,7 +371,7 @@ class ModRepository(private val context: Context) {
         // that are present in the selected mods folder but not yet recorded in
         // this campaign are synthesized as local records; this is required for
         // enabling a mod in a fresh campaign. Unknown names are still skipped.
-        val normalized = { s: String -> s.trim().lowercase().replace(" ", "") }
+        val normalized = { s: String -> s.trim().lowercase().filter { it.isLetterOrDigit() } }
         // The ViewModel normally supplies its already-scanned mod list.
         // Scanning the SAF tree here would re-read every metadata file and
         // preview entry on every toggle, which is very slow on Android 16.

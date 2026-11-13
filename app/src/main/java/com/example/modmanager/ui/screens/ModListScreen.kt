@@ -548,7 +548,7 @@ fun ModListScreen(
                             val toggleCandidates = listOf(mod.title, mod.folderName, mod.id)
                                 .map { it.trim().lowercase() }
                             val modIsActiveInOrder = appOrderForToggle.indexOfFirst { saved ->
-                                val normalized = saved.trim().lowercase().replace(" ", "")
+                                val normalized = saved.trim().lowercase().filter { it.isLetterOrDigit() }
                                 toggleCandidates.any {
                                     it.replace(" ", "") == normalized
                                 }

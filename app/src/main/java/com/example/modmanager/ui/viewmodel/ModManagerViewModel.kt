@@ -425,7 +425,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
         val currentOrder = state.appLoadOrder.ifEmpty { state.displayedGameLoadOrder }
         val modsById = state.mods.associateBy { it.id }
         fun normalized(value: String): String =
-            value.trim().lowercase().replace(" ", "")
+            value.trim().lowercase().filter { it.isLetterOrDigit() }
 
         fun matchesSaved(saved: String, mod: Mod): Boolean =
             listOf(mod.title, mod.folderName, mod.id)
@@ -595,7 +595,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             val order = state.appLoadOrder
                 .ifEmpty { state.displayedGameLoadOrder }
                 .toMutableList()
-            fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
+            fun normalized(value: String) = value.trim().lowercase().filter { it.isLetterOrDigit() }
             selected.forEach { mod ->
                 val alreadyEnabled = order.any { saved ->
                     normalized(saved) == normalized(mod.title) ||
@@ -625,7 +625,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             val selected = state.folderMods.filter { it.id in state.selectedFolderModIds }
             if (selected.isEmpty()) return@launch
 
-            fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
+            fun normalized(value: String) = value.trim().lowercase().filter { it.isLetterOrDigit() }
             val selectedNames = selected
                 .flatMap { mod -> listOf(mod.title, mod.folderName, mod.id) }
                 .map(::normalized)
@@ -818,7 +818,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             .ifEmpty { state.displayedGameLoadOrder }
         if (currentOrder.isEmpty()) return
 
-        fun normalized(value: String): String = value.trim().lowercase().replace(" ", "")
+        fun normalized(value: String): String = value.trim().lowercase().filter { it.isLetterOrDigit() }
         val selectedKeys = state.mods
             .filter { it.id in selectedIds }
             .flatMap { mod -> listOf(mod.title, mod.folderName, mod.id) }
