@@ -6,14 +6,27 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
+import com.darkestdungeon.modmanager.data.update.AppUpdate
+import com.darkestdungeon.modmanager.data.update.AppUpdateChecker
+import com.darkestdungeon.modmanager.R
 import com.darkestdungeon.modmanager.ui.navigation.Screen
 import com.darkestdungeon.modmanager.ui.screens.ModDetailScreen
 import com.darkestdungeon.modmanager.ui.screens.ModListScreen
@@ -27,6 +40,96 @@ fun ModManagerApp(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val updateChecker = remember { AppUpdateChecker() }
+    val updateScope = rememberCoroutineScope()
+    var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var updateDismissed by remember { mutableStateOf(false) }
+    var isDownloadingUpdate by remember { mutableStateOf(false) }
+    var updateDownloadFailed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val currentVersion = context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+            .orEmpty()
+        availableUpdate = updateChecker.check(currentVersion)
+    }
+
+    availableUpdate?.takeUnless { updateDismissed }?.let { update ->
+        AlertDialog(
+            onDismissRequest = {
+                if (!isDownloadingUpdate) updateDismissed = true
+            },
+            title = { Text(stringResource(R.string.update_available_title)) },
+            text = {
+                Text(
+                    text = when {
+                        isDownloadingUpdate -> stringResource(R.string.downloading_update)
+                        updateDownloadFailed -> stringResource(R.string.update_download_failed)
+                        else -> stringResource(R.string.update_available_message, update.version)
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isDownloadingUpdate,
+                    onClick = {
+                        if (update.apkUrl == null) {
+                            updateDismissed = true
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, update.releaseUrl.toUri())
+                                )
+                            }
+                        } else {
+                            updateDownloadFailed = false
+                            isDownloadingUpdate = true
+                            updateScope.launch {
+                                val apkUri = updateChecker.downloadApk(context, update)
+                                isDownloadingUpdate = false
+                                if (apkUri == null) {
+                                    updateDownloadFailed = true
+                                } else {
+                                    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(
+                                            apkUri,
+                                            "application/vnd.android.package-archive"
+                                        )
+                                        addFlags(
+                                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                                Intent.FLAG_ACTIVITY_NEW_TASK
+                                        )
+                                    }
+                                    runCatching {
+                                        context.startActivity(installIntent)
+                                    }.onSuccess {
+                                        updateDismissed = true
+                                    }.onFailure {
+                                        updateDownloadFailed = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        stringResource(
+                            if (update.apkUrl == null) R.string.update_now
+                            else R.string.download_update
+                        )
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !isDownloadingUpdate,
+                    onClick = { updateDismissed = true }
+                ) {
+                    Text(stringResource(R.string.update_later))
+                }
+            }
+        )
+    }
 
     // Navigation Stack
     val backStack = remember { mutableStateListOf<Screen>(Screen.ModList) }
