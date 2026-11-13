@@ -1,6 +1,9 @@
 package com.darkestdungeon.modmanager.ui.screens
 
+import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +57,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -184,7 +188,12 @@ fun ModListScreen(
                                 showCategoryPicker = false
                             },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text(localizedCategoryName(category), textAlign = TextAlign.Start) }
+                        ) {
+                            CategoryOptionLabel(
+                                name = localizedCategoryName(category),
+                                category = category
+                            )
+                        }
                     }
                     TextButton(
                         onClick = {
@@ -192,7 +201,12 @@ fun ModListScreen(
                             showCategoryPicker = false
                         },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("[Unassigned]", textAlign = TextAlign.Start) }
+                    ) {
+                        CategoryOptionLabel(
+                            name = stringResource(R.string.unassigned),
+                            category = null
+                        )
+                    }
                 }
             }
         )
@@ -542,17 +556,16 @@ fun ModListScreen(
 
                             if (selectedTab == 0) {
                                 val previous = filteredList.getOrNull(index - 1)
-                                val categoryName = uiState.categories
+                                val category = uiState.categories
                                     .firstOrNull { it.id == mod.categoryId }
+                                val categoryName = category
                                     ?.let { localizedCategoryName(it) }
                                     ?: stringResource(R.string.unassigned)
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     if (index == 0 || previous?.categoryId != mod.categoryId) {
-                                        Text(
-                                            text = categoryName,
-                                            style = MaterialTheme.typography.labelLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary,
+                                        CategoryHeader(
+                                            name = categoryName,
+                                            category = category,
                                             modifier = Modifier.padding(top = 2.dp)
                                         )
                                     }
@@ -570,17 +583,16 @@ fun ModListScreen(
                                 }
                             } else {
                                 val previous = filteredList.getOrNull(index - 1)
-                                val categoryName = uiState.categories
+                                val category = uiState.categories
                                     .firstOrNull { it.id == mod.categoryId }
+                                val categoryName = category
                                     ?.let { localizedCategoryName(it) }
                                     ?: stringResource(R.string.unassigned)
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     if (index == 0 || previous?.categoryId != mod.categoryId) {
-                                        Text(
-                                            text = categoryName,
-                                            style = MaterialTheme.typography.labelLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary,
+                                        CategoryHeader(
+                                            name = categoryName,
+                                            category = category,
                                             modifier = Modifier.padding(top = 2.dp)
                                         )
                                     }
@@ -656,6 +668,56 @@ fun ModListScreen(
 }
 
 @Composable
+private fun CategoryColorDot(
+    category: ModCategory?,
+    modifier: Modifier = Modifier
+) {
+    val fallback = MaterialTheme.colorScheme.primary
+    val color = category?.let { parseCategoryColor(it.colorHex, fallback) } ?: fallback
+    Box(
+        modifier = modifier
+            .size(10.dp)
+            .background(color, CircleShape)
+    )
+}
+
+@Composable
+private fun CategoryOptionLabel(
+    name: String,
+    category: ModCategory?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        CategoryColorDot(category = category)
+        Text(
+            text = name,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun CategoryHeader(
+    name: String,
+    category: ModCategory?,
+    modifier: Modifier = Modifier
+) {
+    CategoryOptionLabel(
+        name = name,
+        category = category,
+        modifier = modifier
+    )
+}
+
+private fun parseCategoryColor(hex: String, fallback: Color): Color =
+    runCatching { Color(AndroidColor.parseColor(hex.trim())) }.getOrDefault(fallback)
+
+@Composable
 private fun CategoryFilterSelector(
     categories: List<ModCategory>,
     selectedCategoryId: String?,
@@ -663,7 +725,8 @@ private fun CategoryFilterSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedName = categories.firstOrNull { it.id == selectedCategoryId }
+    val selectedCategory = categories.firstOrNull { it.id == selectedCategoryId }
+    val selectedName = selectedCategory
         ?.let { localizedCategoryName(it) }
         ?: if (selectedCategoryId == null) stringResource(R.string.all) else stringResource(R.string.unassigned)
 
@@ -675,10 +738,10 @@ private fun CategoryFilterSelector(
                 .height(52.dp),
             shape = MaterialTheme.shapes.medium
         ) {
-            Text(
-                text = selectedName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            CategoryOptionLabel(
+                name = selectedName,
+                category = selectedCategory,
+                modifier = Modifier.weight(1f)
             )
         }
         DropdownMenu(
@@ -692,7 +755,12 @@ private fun CategoryFilterSelector(
                     .verticalScroll(rememberScrollState())
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.all)) },
+                    text = {
+                        CategoryOptionLabel(
+                            name = stringResource(R.string.all),
+                            category = null
+                        )
+                    },
                     onClick = {
                         onCategorySelected(null)
                         expanded = false
@@ -700,7 +768,12 @@ private fun CategoryFilterSelector(
                 )
                 categories.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text(localizedCategoryName(category)) },
+                        text = {
+                            CategoryOptionLabel(
+                                name = localizedCategoryName(category),
+                                category = category
+                            )
+                        },
                         onClick = {
                             onCategorySelected(category.id)
                             expanded = false
@@ -708,7 +781,12 @@ private fun CategoryFilterSelector(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.unassigned)) },
+                    text = {
+                        CategoryOptionLabel(
+                            name = stringResource(R.string.unassigned),
+                            category = null
+                        )
+                    },
                     onClick = {
                         onCategorySelected(UNASSIGNED_CATEGORY_FILTER_ID)
                         expanded = false
