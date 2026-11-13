@@ -119,6 +119,10 @@ class ModRepository(private val context: Context) {
         prefs.edit().putString(PREF_APP_LOAD_ORDER, order.joinToString(SEP)).apply()
     }
 
+    suspend fun hasAppLoadOrder(): Boolean = withContext(Dispatchers.IO) {
+        prefs.contains(PREF_APP_LOAD_ORDER)
+    }
+
     /** Order staged in the Mods Folder tab; it never writes the game save by itself. */
     suspend fun getFolderOrder(): List<String> = withContext(Dispatchers.IO) {
         prefs.getString(PREF_FOLDER_ORDER, null)

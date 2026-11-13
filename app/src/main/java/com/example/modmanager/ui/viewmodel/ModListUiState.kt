@@ -23,6 +23,8 @@ data class ModListUiState(
     val sourceGameLoadOrder: List<String> = emptyList(),
     /** The APP's OWN load order (source of truth): active mods in current order. */
     val appLoadOrder: List<String> = emptyList(),
+    /** True after the app has explicitly initialized or changed its own order. */
+    val appLoadOrderIsAuthoritative: Boolean = false,
     /** Staged folder-tab order; changing it does not write the source save. */
     val folderOrder: List<String> = emptyList(),
     /** Folder-tab batch selection; this is separate from active/inactive state. */
@@ -43,9 +45,19 @@ data class ModListUiState(
     val statusMessage: String? = null,
     val categoryAssignmentReport: CategoryAssignmentReport? = null
 ) {
-    /** Display classification order: app order wins, else source save, else target save. */
+    /**
+     * Display classification order.
+     *
+     * Once a source save is imported, the app order is authoritative even
+     * when it is empty. Falling back to the target save after disabling all
+     * mods would incorrectly make every target-save mod appear active.
+     */
     val displayedGameLoadOrder: List<String>
-        get() = appLoadOrder.ifEmpty { sourceGameLoadOrder.ifEmpty { gameLoadOrder } }
+        get() = when {
+            appLoadOrderIsAuthoritative -> appLoadOrder
+            sourceGameSaveUriStr != null -> sourceGameLoadOrder
+            else -> appLoadOrder.ifEmpty { sourceGameLoadOrder.ifEmpty { gameLoadOrder } }
+        }
 
     val filteredMods: List<Mod>
         get() = mods.filter { mod ->
@@ -66,14 +78,25 @@ data class ModListUiState(
         return matchesCategory && matchesQuery
     }
 
-    private fun gamePosition(mod: Mod): Int {
-        val candidates = listOf(mod.title, mod.folderName, mod.id)
-            .map { it.trim().lowercase() }
-        return displayedGameLoadOrder.indexOfFirst { saved ->
-            val normalized = saved.trim().lowercase().replace(" ", "")
-            candidates.any { candidate ->
-                candidate.replace(" ", "") == normalized
-            }
+    private fun normalized(value: String): String =
+        value.trim().lowercase().replace(" ", "")
+
+    private fun matchesSaved(saved: String, mod: Mod): Boolean =
+        listOf(mod.title, mod.folderName, mod.id)
+            .any { normalized(it) == normalized(saved) }
+
+    /**
+     * Matches save entries to installed mods one-to-one. A duplicate folder
+     * title or identifier must not make several installed folders appear active
+     * from one save record.
+     */
+    private fun matchedActiveMods(): List<Pair<Mod, Int>> {
+        val remainingMods = mods.toMutableList()
+        return displayedGameLoadOrder.mapIndexedNotNull { position, saved ->
+            val match = remainingMods.firstOrNull { mod -> matchesSaved(saved, mod) }
+                ?: return@mapIndexedNotNull null
+            remainingMods.remove(match)
+            match to position
         }
     }
 
@@ -91,20 +114,28 @@ data class ModListUiState(
                 )
         }
 
-    /** Active = present in the current source-of-truth order, in that order. */
+    /** Active = matched one-to-one against the current source-save order. */
     val activeMods: List<Mod>
-        get() = mods
-            .filter { matchesSearch(it) && gamePosition(it) >= 0 }
-            .sortedBy { gamePosition(it) }
+        get() = matchedActiveMods()
+            .filter { (mod, _) -> matchesSearch(mod) }
+            .sortedBy { (_, position) -> position }
+            .map { (mod, _) -> mod }
 
-    /** Inactive = not present in the current source-of-truth order. */
+    /**
+     * Inactive = installed mods left after one-to-one active matching.
+     * Their visual order follows the reserve/folder order so the user can
+     * compare the inactive list directly with the staged order.
+     */
     val inactiveMods: List<Mod>
         get() {
+            val activeMods = matchedActiveMods().map { it.first }.toSet()
+            val stagedPosition = folderOrder.withIndex().associate { it.value to it.index }
             val categoryOrder = categories.mapIndexed { index, category -> category.id to index }.toMap()
             return mods
-                .filter { matchesSearch(it) && gamePosition(it) < 0 }
+                .filter { matchesSearch(it) && it !in activeMods }
                 .sortedWith(
-                    compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+                    compareBy<Mod> { stagedPosition[it.id] ?: Int.MAX_VALUE }
+                        .thenBy { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
                         .thenBy { it.title.lowercase() }
                 )
         }
@@ -115,15 +146,15 @@ data class ModListUiState(
      * what is visible in the list tabs.
      */
     val enabledCount: Int
-        get() = if (displayedGameLoadOrder.isNotEmpty()) {
-            mods.count { gamePosition(it) >= 0 }
+        get() = if (appLoadOrderIsAuthoritative || displayedGameLoadOrder.isNotEmpty()) {
+            matchedActiveMods().size
         } else {
             mods.count { it.isEnabled }
         }
 
     val disabledCount: Int
-        get() = if (displayedGameLoadOrder.isNotEmpty()) {
-            mods.count { gamePosition(it) < 0 }
+        get() = if (appLoadOrderIsAuthoritative || displayedGameLoadOrder.isNotEmpty()) {
+            mods.size - matchedActiveMods().size
         } else {
             mods.count { !it.isEnabled }
         }

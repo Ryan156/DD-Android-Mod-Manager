@@ -68,9 +68,10 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 val saveUri = repository.getActiveSaveUri()
                 val saveFileUri = repository.getActiveSaveFileUri()
                 val sourceSaveFileUri = repository.getSourceSaveFileUri()
-                // The APP's OWN load order is the source of truth (persisted);
-                // it is only replaced by a new source-save import.
-                val appOrder = repository.getAppLoadOrder()
+                // The imported source save is the source of truth at startup.
+                // This also preserves an intentionally empty source order,
+                // instead of reviving a stale cached app order.
+                val storedAppOrder = repository.getAppLoadOrder()
                 val savedFolderOrder = repository.getFolderOrder()
                 val categories = repository.getCategories()
                 val selectedCategoryId = repository.getSelectedCategoryId()
@@ -84,12 +85,26 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     saveFileUri != null -> repository.readGameLoadOrderFile(saveFileUri)
                     else -> automaticResult
                 }
-                // Source order: the imported source save when present, else
-                // the app's own persisted order, else the target save's order.
+                val importedSourceResult = sourceSaveFileUri?.let {
+                    repository.readGameLoadOrderFile(it)
+                }
+                val sourceFileIsReadable = importedSourceResult?.warning == null
+                val appOrder = if (sourceFileIsReadable) {
+                    importedSourceResult?.mods ?: emptyList()
+                } else {
+                    storedAppOrder
+                }
+                val appOrderIsAuthoritative =
+                    sourceFileIsReadable || repository.hasAppLoadOrder()
+                // Source order shown in Save Orders follows the imported source
+                // file; otherwise use the cached app order or target order.
                 val sourceOrder = when {
-                    sourceSaveFileUri != null -> repository.readGameLoadOrderFile(sourceSaveFileUri).mods
-                    appOrder.isNotEmpty() -> appOrder
+                    sourceFileIsReadable -> importedSourceResult?.mods ?: emptyList()
+                    storedAppOrder.isNotEmpty() -> storedAppOrder
                     else -> savedOrder?.mods ?: emptyList()
+                }
+                if (sourceFileIsReadable && appOrder != storedAppOrder) {
+                    repository.saveAppLoadOrder(appOrder)
                 }
                 _uiState.update {
                     it.copy(
@@ -100,6 +115,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         sourceGameSaveUriStr = sourceSaveFileUri,
                         sourceGameLoadOrder = sourceOrder,
                         appLoadOrder = appOrder,
+                        appLoadOrderIsAuthoritative = appOrderIsAuthoritative,
                         categories = categories,
                         selectedCategoryId = selectedCategoryId
                             ?.takeIf { id -> categories.any { it.id == id } }
@@ -169,6 +185,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                         sourceGameSaveUriStr = uriStr,
                         sourceGameLoadOrder = result.mods,
                         appLoadOrder = result.mods,
+                        appLoadOrderIsAuthoritative = true,
                         mods = orderModsForGame(it.mods, result.mods),
                         errorMessage = result.warning
                     )
@@ -304,6 +321,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 state.copy(
                     mods = orderModsForGame(state.mods, newAppOrder),
                     appLoadOrder = newAppOrder,
+                appLoadOrderIsAuthoritative = true,
                     sourceGameLoadOrder = if (state.sourceGameSaveUriStr == null) {
                         state.sourceGameLoadOrder
                     } else newAppOrder,
@@ -385,6 +403,98 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                     folderOrder = nextOrder,
                     selectedFolderModIds = emptySet()
                 )
+            }
+        }
+    }
+
+    /**
+     * Enables every installed mod in the current reserve order and writes
+     * that complete order to the imported source save. Hidden/system entries
+     * already present in the save are retained.
+     */
+    fun enableAllMods() {
+        val state = _uiState.value
+        val sourceUri = state.sourceGameSaveUriStr
+        if (sourceUri == null) {
+            _uiState.update {
+                it.copy(errorMessage = localizedString(R.string.import_source_save_first))
+            }
+            return
+        }
+
+        val currentOrder = state.appLoadOrder.ifEmpty { state.displayedGameLoadOrder }
+        val modsById = state.mods.associateBy { it.id }
+        fun normalized(value: String): String =
+            value.trim().lowercase().replace(" ", "")
+
+        fun matchesSaved(saved: String, mod: Mod): Boolean =
+            listOf(mod.title, mod.folderName, mod.id)
+                .any { normalized(it) == normalized(saved) }
+
+        val desiredVisibleNames = state.folderOrder
+            .mapNotNull { modsById[it] }
+            .map { mod ->
+                currentOrder.firstOrNull { saved -> matchesSaved(saved, mod) } ?: mod.title
+            }
+
+        var nextVisibleIndex = 0
+        val reorderedVisible = currentOrder.map { saved ->
+            val visibleMod = state.mods.firstOrNull { mod -> matchesSaved(saved, mod) }
+            if (visibleMod != null) {
+                desiredVisibleNames.getOrNull(nextVisibleIndex++) ?: saved
+            } else {
+                // Preserve hidden generated/system entries and unknown save
+                // records instead of silently deleting them.
+                saved
+            }
+        }
+        val alreadyPlaced = nextVisibleIndex
+        val reordered = reorderedVisible + desiredVisibleNames.drop(alreadyPlaced)
+
+        if (reordered == currentOrder) {
+            _uiState.update {
+                it.copy(statusMessage = localizedString(R.string.reserve_order_already_applied))
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            when (val outcome = saveWriteMutex.withLock {
+                withContext(Dispatchers.IO) {
+                    repository.applyLoadOrderToSave(
+                        sourceUri,
+                        reordered,
+                        installedMods = state.mods
+                    )
+                }
+            }) {
+                is TransferOutcome.Error ->
+                    _uiState.update { it.copy(errorMessage = "Save was not written: ${outcome.reason}") }
+                is TransferOutcome.Refused ->
+                    _uiState.update { it.copy(errorMessage = "Save write refused: ${outcome.reason}") }
+                is TransferOutcome.Success -> {
+                    // Use the order actually resolved and written by the DSON
+                    // writer; ignored names must not remain falsely active.
+                    val writtenOrder = outcome.plan.matched
+                    repository.saveAppLoadOrder(writtenOrder)
+                    _uiState.update {
+                        it.copy(
+                            mods = orderModsForGame(it.mods, writtenOrder),
+                            appLoadOrder = writtenOrder,
+                            appLoadOrderIsAuthoritative = true,
+                            sourceGameLoadOrder = writtenOrder,
+                            statusMessage = localizedString(
+                                R.string.source_save_written,
+                                writtenOrder.size
+                            ),
+                            errorMessage = outcome.plan.ignoredNotInstalled
+                                .takeIf { it.isNotEmpty() }
+                                ?.let { names ->
+                                    "Save written, but ${names.size} mod(s) were skipped: ${names.joinToString()}"
+                                }
+                        )
+                    }
+                }
             }
         }
     }
@@ -500,6 +610,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     mods = orderModsForGame(it.mods, order),
                     appLoadOrder = order,
+                    appLoadOrderIsAuthoritative = true,
                     selectedFolderModIds = emptySet(),
                     sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) it.sourceGameLoadOrder else order
                 )
@@ -528,44 +639,8 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     mods = orderModsForGame(it.mods, order),
                     appLoadOrder = order,
+                    appLoadOrderIsAuthoritative = true,
                     selectedFolderModIds = emptySet(),
-                    sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) it.sourceGameLoadOrder else order
-                )
-            }
-            applyAppOrderToSourceSave(order)
-        }
-    }
-
-    fun enableAllMods() {
-        viewModelScope.launch {
-            // ORDER-ONLY: enable every installed mod in the same category
-            // order shown by the folder tab. Existing save names are reused
-            // where they match, while new entries use the installed title.
-            val state = _uiState.value
-            val currentOrder = state.appLoadOrder
-                .ifEmpty { state.displayedGameLoadOrder }
-            val categoryOrder = state.categories
-                .mapIndexed { index, category -> category.id to index }
-                .toMap()
-            val folderOrder = state.mods.sortedWith(
-                compareBy<Mod> { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
-                    .thenBy { it.title.lowercase() }
-            )
-            fun normalized(value: String) = value.trim().lowercase().replace(" ", "")
-            fun savedNameFor(mod: Mod): String {
-                return currentOrder.firstOrNull { saved ->
-                    listOf(mod.title, mod.folderName, mod.id)
-                        .map(::normalized)
-                        .any { it == normalized(saved) }
-                } ?: mod.title
-            }
-            val order = folderOrder.map(::savedNameFor)
-
-            repository.saveAppLoadOrder(order)
-            _uiState.update {
-                it.copy(
-                    mods = orderModsForGame(it.mods, order),
-                    appLoadOrder = order,
                     sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) it.sourceGameLoadOrder else order
                 )
             }
@@ -581,6 +656,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     mods = it.mods,
                     appLoadOrder = emptyList(),
+                    appLoadOrderIsAuthoritative = true,
                     sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) it.sourceGameLoadOrder else emptyList()
                 )
             }
@@ -695,6 +771,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             it.copy(
                 mods = repositioned,
                 appLoadOrder = newAppOrder,
+                appLoadOrderIsAuthoritative = true,
                 sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) {
                     it.sourceGameLoadOrder
                 } else newAppOrder
@@ -768,6 +845,7 @@ class ModManagerViewModel(application: Application) : AndroidViewModel(applicati
             it.copy(
                 mods = orderModsForGame(it.mods, newAppOrder),
                 appLoadOrder = newAppOrder,
+                appLoadOrderIsAuthoritative = true,
                 selectedActiveModIds = emptySet(),
                 sourceGameLoadOrder = if (it.sourceGameSaveUriStr == null) {
                     it.sourceGameLoadOrder
