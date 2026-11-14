@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">DD Mod Manager</string>
+    <string name="about_app">About the app</string>
+    <string name="about_app_description">DD Mod Manager is a free, independent project created to make Darkest Dungeon mod and campaign load-order management more convenient on Android.</string>
+    <string name="support_app_description">Enjoying this project? If you find it useful and would like to support its continued development, consider buying me a coffee. Donations are completely optional and always appreciated!</string>
+    <string name="buy_me_a_coffee">Buy me a coffee</string>
     <string name="settings_storage">Settings &amp; Storage</string>
     <string name="language">Language</string>
     <string name="language_description">Choose the language used by DD Mod Manager.</string>
