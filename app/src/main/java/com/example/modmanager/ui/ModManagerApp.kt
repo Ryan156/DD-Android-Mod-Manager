@@ -138,7 +138,15 @@ fun ModManagerApp(
     }
 
     // Navigation Stack
-    val backStack = remember { mutableStateListOf<Screen>(Screen.ModList) }
+    val backStack = remember {
+        mutableStateListOf<Screen>(
+            if (AppLanguage.consumeReturnToSettings(context)) {
+                Screen.Settings
+            } else {
+                Screen.ModList
+            }
+        )
+    }
     val currentScreen = backStack.lastOrNull() ?: Screen.ModList
 
     // SAF Directory Picker Launchers

@@ -17,6 +17,7 @@ data class AppLanguageOption(
 object AppLanguage {
     private const val PREFS = "dd_mod_manager_prefs"
     private const val KEY_LANGUAGE = "app_language"
+    private const val KEY_RETURN_TO_SETTINGS = "return_to_settings_after_language_change"
 
     val options = listOf(
         AppLanguageOption("en", "English"),
@@ -41,8 +42,18 @@ object AppLanguage {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_LANGUAGE, tag)
+            .putBoolean(KEY_RETURN_TO_SETTINGS, true)
             .apply()
         if (context is Activity) context.recreate()
+    }
+
+    fun consumeReturnToSettings(context: Context): Boolean {
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val shouldReturn = preferences.getBoolean(KEY_RETURN_TO_SETTINGS, false)
+        if (shouldReturn) {
+            preferences.edit().remove(KEY_RETURN_TO_SETTINGS).apply()
+        }
+        return shouldReturn
     }
 
     fun localizedContext(context: Context): Context {
