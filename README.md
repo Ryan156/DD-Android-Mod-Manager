@@ -1,15 +1,17 @@
 # DD Mod Manager
 
-DD Mod Manager is an independent Android utility for managing Darkest Dungeon mods and campaign load orders on mobile devices.
+DD Mod Manager is an independent Android utility for organizing Darkest Dungeon mods and managing campaign load orders on mobile devices.
 
-It is intended for users who already own a legitimate PC copy of the game and use a compatible Android port or porter project. Some porter projects require users to provide files from their own legally purchased PC copy. DD Mod Manager does not include, extract, or distribute the game, port files, or copyrighted game assets.
+It is designed for users who own the game legally and use a compatible Android porter or mobile-port project. The app manages user-provided mod folders and save files; it does not provide the game, an Android port, copyrighted assets, or third-party mods.
 
-For one example of a community mobile ports project, see the [Darkest Dungeon Porter releases](https://github.com/KatayR/darkest-dungeon-porter/releases). This project is not affiliated with, operated by, or endorsed by that repository or its contributors.
+For reference, one community porter project is [Darkest Dungeon Porter](https://github.com/KatayR/darkest-dungeon-porter/releases). DD Mod Manager is not affiliated with, operated by, or endorsed by that project or its contributors.
 
 ## Features
 
-- Scan a user-selected mod directory.
-- Browse installed mods in a folder-based list.
+### Mod library
+
+- Scan a user-selected mods directory with Android Storage Access Framework support.
+- Browse all detected mod folders in a compact Compose interface.
 - Read metadata from each mod's `project.xml`, including:
   - title
   - version
@@ -17,59 +19,145 @@ For one example of a community mobile ports project, see the [Darkest Dungeon Po
   - description
   - tags
 - Display each mod's `preview_icon.png` when available.
-- Organize mods into:
-  - Mods Folder
-  - Active
-  - Inactive
-- Enable or disable individual mods through the current load order.
-- Select and enable or disable multiple mods together.
-- Reorder selected active mods as a group.
-- Enable all, disable all, and rescan the mod directory.
-- Import source and target campaign save files.
-- Copy a source campaign's load order to a target campaign.
-- Write supported load-order changes back to the imported source save.
-- Use the Android Storage Access Framework for folders and save files.
-- Parse and write the game's serialized DSON save data while preserving the surrounding save structure.
+- Show individual mod details, folder information, language, version, tags, and current save status.
+- Hide the port-generated folders `.port-nx-original` and `.port-switch` from the user-facing mod lists.
+- Detect active mods using the save's actual load-order membership rather than folder presence.
 
-## Storage and save files
+### Categories
 
-Storage locations depend on the Android port being used. Configure the mod directory from **Settings & Storage** instead of relying on a fixed path.
+- Built-in categories:
+  - UI
+  - Districts
+  - Dungeons
+  - Quirks
+  - Trinkets
+  - Enemies
+  - Class Patch
+  - Class
+  - Skins
+- Create, rename, recolor, reorder, and remove custom categories.
+- Reorder and recolor built-in categories; built-in names and entries cannot be deleted.
+- Reset the built-in category order.
+- Automatically categorize mods from project metadata, titles, tags, descriptions, and folder names.
+- Manually assign one or multiple mods to a category.
+- Use category colors consistently in headers, filters, and assignment controls.
+- Sort the reserve list by the current category order.
+- Keep unassigned mods in an `[Unassigned]` category at the bottom.
 
-Android restricts direct access to many protected app-data directories, especially on newer Android versions. DD Mod Manager therefore supports importing save files through the Android file picker and using persisted Storage Access Framework permissions where available.
+### Reserve and save load orders
 
-## Mod activation model
+The app keeps two separate concepts:
 
-DD Mod Manager treats load-order membership as the source of truth for activation:
+- **Reserve order:** the planned order of installed mods in the Mods Folder tab.
+- **Source save order:** the active order actually written to the imported source `persist.game.json`.
 
-- Enabling a mod adds it to the current source load order.
-- Disabling a mod removes it from the current source load order.
-- Mod folders are not moved or renamed.
-- Source-save changes are written when a source save has been imported.
-- The target save is changed only when the user explicitly copies the source order to it.
+The reserve order can be arranged before enabling mods. The Active tab reflects the source save, while the Inactive tab follows the reserve order for easier comparison.
 
-Some Android ports generate internal folders used by the port itself. The app hides known generated folders from its mod lists and does not delete or modify them.
+Supported actions include:
+
+- Select multiple mods.
+- Enable or disable selected mods.
+- Enable all mods using the current reserve order.
+- Disable all mods.
+- Move selected active mods to a chosen load-order position.
+- Reorder active mods individually.
+- Reorder reserve mods without immediately changing the save.
+- Apply source-save changes with backup and read-back verification.
+- Detect and report save entries that cannot be matched to installed folders.
+- Use one-to-one matching so duplicate or ambiguous identifiers do not falsely activate multiple folders.
+
+### Save management
+
+- Import a source campaign save.
+- Import a target campaign save.
+- Copy the source campaign load order to the target save.
+- Write source load-order changes directly to the imported source save.
+- Preserve the game's serialized DSON structure while editing both mod-list locations.
+- Verify rebuilt saves before writing them.
+- Create timestamped versioned backups in a `backup save` folder beside the selected save when the storage provider allows it.
+- Keep the target save unchanged until the user explicitly copies the source order to it.
+
+## Supported save format
+
+The Android port stores `persist.game.json` as serialized binary DSON data despite the `.json` extension. DD Mod Manager includes custom DSON decoding, editing, encoding, validation, and round-trip tests.
+
+The writer:
+
+1. Reads and decodes the original save.
+2. Updates the persistent mod lists.
+3. Rebuilds the DSON metadata.
+4. Re-decodes the generated bytes for verification.
+5. Creates a backup of the original.
+6. Writes and re-reads the new save to verify the final bytes.
+
+If a save cannot be safely rebuilt or verified, the app refuses to overwrite it.
 
 ## Recommended workflow
 
-1. Complete the required in-game setup and create a campaign save.
-2. Import that file as the source save.
-3. Select mods from the Mods Folder tab.
-4. Review the Active and Inactive tabs.
-5. Reorder active mods individually or as a group.
-6. Import the campaign that should receive the load order as the target save.
-7. Use **Copy source order to target**.
-8. Import the resulting target save back into the game using the port's own save-import process.
+1. Create or export a campaign save using the game or porter.
+2. Open **Settings & Storage** and import it as the source save.
+3. Configure the mods directory.
+4. Rescan the directory.
+5. Review or adjust categories.
+6. Arrange the desired reserve order in the Mods Folder tab.
+7. Enable selected mods, or use **Enable All** to write the complete reserve order.
+8. Review the Active and Inactive tabs.
+9. Import the campaign that should receive the order as the target save.
+10. Use **Copy source order to target**.
+11. Import the resulting target save back into the game using the porter's own save-import workflow.
 
-Always keep backups of original save files before importing or modifying them.
+Keep original saves and backups before experimenting with a new load order.
 
-## Building
+## Android storage
 
-Requirements:
+The app uses the Android Storage Access Framework and persisted URI permissions where available. Android 14 and newer restrict direct access to many protected app-data directories, so the app supports importing individual save files through the system file picker.
 
-- Android Studio
-- JDK 11
-- Android SDK with the project's configured compile SDK
+The exact mod and save locations depend on the Android porter being used. Configure them from **Settings & Storage** rather than assuming a universal path.
+
+## Localization
+
+The interface includes language selection for:
+
+- English
+- Simplified Chinese
+- Portuguese
+- Spanish
+- Hindi
+- Filipino
+- Thai
+- Vietnamese
+- Indonesian
+- Malay
+
+English is used as the system-default fallback when a translation is unavailable.
+
+## Updates
+
+- Release builds can check the project's GitHub Releases page for updates.
+- Debug builds do not prompt for production updates.
+- Release APK downloads can be handed to Android's package installer.
+
+## Technology
+
+- Kotlin
+- Jetpack Compose
+- Material 3
+- Kotlin Coroutines
+- Android Storage Access Framework
+- DocumentFile
+- Kotlin serialization
+- Custom DSON parser and writer
+- Gradle Kotlin DSL
+- GitHub Actions release builds
+
+## Requirements
+
 - Android 7.0 / API 24 or newer
+- Android Studio for development
+- A configured Android SDK
+- JDK 11 for the project build
+
+## Build
 
 Run unit tests:
 
@@ -89,53 +177,21 @@ The debug APK is generated at:
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Release signing
+GitHub Actions can build signed release APKs using repository secrets. Signing credentials and keystores must never be committed to the repository.
 
-Release signing is configured through environment variables so keystore credentials are not committed to the repository:
+## Legal notice
 
-```text
-ANDROID_KEYSTORE_PATH
-ANDROID_KEYSTORE_PASSWORD
-ANDROID_KEY_ALIAS
-ANDROID_KEY_PASSWORD
-```
-
-The GitHub Actions release workflow expects these repository secrets:
-
-```text
-ANDROID_KEYSTORE_BASE64
-ANDROID_KEYSTORE_PASSWORD
-ANDROID_KEY_ALIAS
-ANDROID_KEY_PASSWORD
-```
-
-Never commit a keystore, signing password, or decoded release key to the repository.
-
-## Technical overview
-
-- Kotlin
-- Jetpack Compose and Material 3
-- Kotlin Coroutines
-- Android Storage Access Framework
-- DocumentFile
-- Kotlin serialization
-- Custom DSON parsing, editing, validation, and round-trip tests
-- Firebase Analytics
-- Gradle Kotlin DSL
-
-## Disclaimer and legal notice
-
-DD Mod Manager is an independent, community-made utility. It is not affiliated with or endorsed by Red Hook Studios, any publisher, any rights holder, or any third-party porter project.
+DD Mod Manager is an independent community utility. It is not affiliated with Red Hook Studios, any publisher, rights holder, or third-party porter project.
 
 This repository does not distribute, host, or provide:
 
-- the Darkest Dungeon game
-- Android port or porter APKs
+- Darkest Dungeon
+- Android porter or port APKs
 - copyrighted game files or assets
 - paid content
 - third-party mod files
 
-Users are responsible for obtaining the game, any compatible Android port, save files, and mods legally and independently. This project is intended only to manage user-owned files.
+Users are responsible for obtaining the game, a compatible porter, save files, and mods legally and independently.
 
 No piracy. No game APK distribution.
 
