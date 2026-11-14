@@ -179,6 +179,18 @@ app/build/outputs/apk/debug/app-debug.apk
 
 GitHub Actions can build signed release APKs using repository secrets. Signing credentials and keystores must never be committed to the repository.
 
+## Support the project
+
+Hi! I'm an independent developer who enjoys creating tools and projects for gaming communities.
+
+I created DD Mod Manager to make managing Darkest Dungeon mods on Android easier and more convenient. It started as a personal project to solve a problem I encountered myself, and I decided to share it with the community.
+
+If you have found my projects useful and would like to support my work, you can [buy me a coffee on Ko-fi](https://ko-fi.com/ryan156). Your support helps motivate me to continue developing, maintaining, and improving my projects.
+
+Every bit of support is appreciated. Thank you! ❤️
+
+All my projects are free to use. Donations are entirely optional.
+
 ## Legal notice
 
 DD Mod Manager is an independent community utility. It is not affiliated with Red Hook Studios, any publisher, rights holder, or third-party porter project.
